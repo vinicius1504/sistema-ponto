@@ -43,6 +43,24 @@ interface Funcionario {
   codigoFuncionario: string
 }
 
+const ReportIcon = ({ className = "w-6 h-6 text-blue-600" }: { className?: string }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+  </svg>
+)
+
+const DownloadIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+  </svg>
+)
+
+const SearchIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+  </svg>
+)
+
 export default function RelatoriosPage() {
   const folhaRef = useRef<HTMLDivElement>(null)
   const [loading, setLoading] = useState(false)
@@ -87,7 +105,7 @@ export default function RelatoriosPage() {
         setFuncionarios(data.funcionarios)
       }
     } catch (error) {
-      console.error('Erro ao buscar funcionários:', error)
+      console.error('Erro ao buscar funcionarios:', error)
     }
   }
 
@@ -112,7 +130,7 @@ export default function RelatoriosPage() {
         setUsuario(data.usuario)
       }
     } catch (error) {
-      console.error('Erro ao buscar relatório:', error)
+      console.error('Erro ao buscar relatorio:', error)
     } finally {
       setLoading(false)
     }
@@ -164,18 +182,16 @@ export default function RelatoriosPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900">Relatórios</h1>
-
       {/* Filtros */}
       <Card>
         <CardHeader>
-          <CardTitle>Filtros</CardTitle>
+          <CardTitle icon={<ReportIcon />}>Filtros do Relatorio</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <Input
               id="dataInicio"
-              label="Data Início"
+              label="Data Inicio"
               type="date"
               value={filters.dataInicio}
               onChange={(e) =>
@@ -194,11 +210,11 @@ export default function RelatoriosPage() {
 
             {isAdmin && (
               <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">
-                  Funcionário
+                <label className="mb-2 block text-sm font-semibold text-slate-700">
+                  Funcionario
                 </label>
                 <select
-                  className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="flex h-12 w-full rounded-xl border-2 border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 transition-all duration-200 focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-500/10"
                   value={filters.usuarioId}
                   onChange={(e) =>
                     setFilters({ ...filters, usuarioId: e.target.value })
@@ -215,7 +231,13 @@ export default function RelatoriosPage() {
             )}
 
             <div className="flex items-end">
-              <Button onClick={handleSearch} disabled={loading} className="w-full">
+              <Button
+                onClick={handleSearch}
+                disabled={loading}
+                className="w-full"
+                loading={loading}
+                icon={<SearchIcon />}
+              >
                 {loading ? 'Buscando...' : 'Buscar'}
               </Button>
             </div>
@@ -223,10 +245,16 @@ export default function RelatoriosPage() {
         </CardContent>
       </Card>
 
-      {/* Botão de Exportar */}
+      {/* Botao de Exportar */}
       {usuario && registros.length > 0 && (
         <div className="flex justify-end">
-          <Button onClick={handleExportPDF} disabled={exporting}>
+          <Button
+            onClick={handleExportPDF}
+            disabled={exporting}
+            loading={exporting}
+            variant="success"
+            icon={<DownloadIcon />}
+          >
             {exporting ? 'Exportando...' : 'Exportar PDF'}
           </Button>
         </div>
@@ -239,7 +267,7 @@ export default function RelatoriosPage() {
             <CardTitle>Preview da Folha de Ponto</CardTitle>
           </CardHeader>
           <CardContent className="overflow-auto">
-            <div className="border border-gray-300 inline-block">
+            <div className="border border-slate-300 inline-block bg-white">
               <FolhaPonto
                 ref={folhaRef}
                 usuario={usuario}
@@ -254,9 +282,13 @@ export default function RelatoriosPage() {
 
       {!usuario && !loading && (
         <Card>
-          <CardContent className="py-12 text-center text-gray-500">
-            Selecione os filtros e clique em "Buscar" para visualizar o
-            relatório
+          <CardContent className="py-12 text-center">
+            <div className="w-16 h-16 bg-slate-100 rounded-2xl mx-auto mb-4 flex items-center justify-center">
+              <ReportIcon className="w-8 h-8 text-slate-400" />
+            </div>
+            <p className="text-slate-500">
+              Selecione os filtros e clique em &quot;Buscar&quot; para visualizar o relatorio
+            </p>
           </CardContent>
         </Card>
       )}

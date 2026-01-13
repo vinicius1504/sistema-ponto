@@ -12,6 +12,18 @@ interface TodayPunch {
   saida: string | null
 }
 
+const ClockIcon = ({ className = "w-8 h-8" }: { className?: string }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+  </svg>
+)
+
+const CheckIcon = () => (
+  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+  </svg>
+)
+
 export default function PontoPage() {
   const [currentTime, setCurrentTime] = useState(new Date())
   const [todayPunch, setTodayPunch] = useState<TodayPunch | null>(null)
@@ -79,56 +91,65 @@ export default function PontoPage() {
   const isCompleto = nextPunch === 'completo'
 
   return (
-    <div className="space-y-6 max-w-2xl mx-auto">
-      <h1 className="text-2xl font-bold text-gray-900 text-center">Bater Ponto</h1>
+    <div className="max-w-3xl mx-auto space-y-6">
+      {/* Main Clock Card */}
+      <Card variant="gradient" className="overflow-hidden relative">
+        <div className="absolute inset-0 bg-black/10"></div>
+        <div className="absolute -right-20 -top-20 w-64 h-64 bg-white/10 rounded-full"></div>
+        <div className="absolute -left-20 -bottom-20 w-48 h-48 bg-white/5 rounded-full"></div>
 
-      {/* Relógio */}
-      <Card>
-        <CardContent className="pt-6">
+        <CardContent className="relative pt-8 pb-10">
           <div className="text-center">
-            <p className="text-6xl font-bold text-blue-600 font-mono">
-              {formatTime(currentTime)}
-            </p>
-            <p className="text-xl text-gray-500 mt-4">
-              {getDayOfWeek(currentTime)},{' '}
-              {currentTime.toLocaleDateString('pt-BR', {
+            <p className="text-blue-100 mb-2">
+              {getDayOfWeek(currentTime)}, {currentTime.toLocaleDateString('pt-BR', {
                 day: '2-digit',
                 month: 'long',
                 year: 'numeric'
               })}
             </p>
+            <p className="text-7xl md:text-8xl font-bold text-white font-mono tracking-tight">
+              {formatTime(currentTime)}
+            </p>
+            <p className="text-blue-100 mt-4 text-lg">
+              Proxima batida: <span className="font-semibold text-white">{getPunchTypeLabel(nextPunch)}</span>
+            </p>
           </div>
         </CardContent>
       </Card>
 
-      {/* Botão de Bater Ponto */}
+      {/* Punch Button */}
       <Card>
-        <CardContent className="pt-6">
+        <CardContent className="pt-6 pb-6">
           <div className="text-center space-y-4">
-            <p className="text-lg text-gray-600">
-              Próxima batida:{' '}
-              <span className="font-bold text-blue-600">
-                {getPunchTypeLabel(nextPunch)}
-              </span>
-            </p>
-
             <Button
-              size="lg"
-              className="w-full h-20 text-2xl"
+              size="xl"
+              variant={isCompleto ? 'success' : 'primary'}
+              className="w-full h-20 text-xl"
               onClick={handleBaterPonto}
               disabled={loading || isCompleto}
+              loading={loading}
+              icon={isCompleto ? <CheckIcon /> : <ClockIcon />}
             >
               {loading ? 'Registrando...' : isCompleto ? 'Dia Completo' : 'BATER PONTO'}
             </Button>
 
             {message && (
               <div
-                className={`p-4 rounded-md ${
+                className={`p-4 rounded-xl flex items-center gap-3 ${
                   message.type === 'success'
-                    ? 'bg-green-50 text-green-700 border border-green-200'
+                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                     : 'bg-red-50 text-red-700 border border-red-200'
                 }`}
               >
+                {message.type === 'success' ? (
+                  <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                ) : (
+                  <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                )}
                 {message.text}
               </div>
             )}
@@ -136,70 +157,121 @@ export default function PontoPage() {
         </CardContent>
       </Card>
 
-      {/* Registro do Dia */}
+      {/* Today's Record */}
       <Card>
         <CardHeader>
-          <CardTitle>Registro de Hoje</CardTitle>
+          <CardTitle icon={<ClockIcon className="w-6 h-6 text-blue-600" />}>Registro de Hoje</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 gap-4">
+            {/* Entrada */}
             <div
-              className={`text-center p-4 rounded-lg ${
-                todayPunch?.entrada ? 'bg-green-50' : 'bg-gray-50'
+              className={`relative p-5 rounded-2xl border-2 transition-all duration-300 ${
+                todayPunch?.entrada
+                  ? 'bg-emerald-50 border-emerald-200'
+                  : nextPunch === 'entrada'
+                    ? 'bg-blue-50 border-blue-300 border-dashed'
+                    : 'bg-slate-50 border-slate-200'
               }`}
             >
-              <p className="text-sm text-gray-500 mb-1">Entrada</p>
-              <p className="text-2xl font-semibold">
+              {nextPunch === 'entrada' && !todayPunch?.entrada && (
+                <span className="absolute -top-2 -right-2 w-4 h-4 bg-blue-500 rounded-full animate-pulse"></span>
+              )}
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Entrada</span>
+                {todayPunch?.entrada && (
+                  <span className="w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center text-white">
+                    <CheckIcon />
+                  </span>
+                )}
+              </div>
+              <p className={`text-3xl font-bold ${todayPunch?.entrada ? 'text-slate-800' : 'text-slate-400'}`}>
                 {todayPunch?.entrada
-                  ? new Date(todayPunch.entrada).toLocaleTimeString('pt-BR', {
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })
+                  ? new Date(todayPunch.entrada).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
                   : '--:--'}
               </p>
             </div>
+
+            {/* Saida Almoco */}
             <div
-              className={`text-center p-4 rounded-lg ${
-                todayPunch?.saidaAlmoco ? 'bg-yellow-50' : 'bg-gray-50'
+              className={`relative p-5 rounded-2xl border-2 transition-all duration-300 ${
+                todayPunch?.saidaAlmoco
+                  ? 'bg-amber-50 border-amber-200'
+                  : nextPunch === 'saidaAlmoco'
+                    ? 'bg-blue-50 border-blue-300 border-dashed'
+                    : 'bg-slate-50 border-slate-200'
               }`}
             >
-              <p className="text-sm text-gray-500 mb-1">Saída Almoço</p>
-              <p className="text-2xl font-semibold">
+              {nextPunch === 'saidaAlmoco' && !todayPunch?.saidaAlmoco && (
+                <span className="absolute -top-2 -right-2 w-4 h-4 bg-blue-500 rounded-full animate-pulse"></span>
+              )}
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Saida Almoco</span>
+                {todayPunch?.saidaAlmoco && (
+                  <span className="w-6 h-6 bg-amber-500 rounded-full flex items-center justify-center text-white">
+                    <CheckIcon />
+                  </span>
+                )}
+              </div>
+              <p className={`text-3xl font-bold ${todayPunch?.saidaAlmoco ? 'text-slate-800' : 'text-slate-400'}`}>
                 {todayPunch?.saidaAlmoco
-                  ? new Date(todayPunch.saidaAlmoco).toLocaleTimeString('pt-BR', {
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })
+                  ? new Date(todayPunch.saidaAlmoco).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
                   : '--:--'}
               </p>
             </div>
+
+            {/* Volta Almoco */}
             <div
-              className={`text-center p-4 rounded-lg ${
-                todayPunch?.voltaAlmoco ? 'bg-yellow-50' : 'bg-gray-50'
+              className={`relative p-5 rounded-2xl border-2 transition-all duration-300 ${
+                todayPunch?.voltaAlmoco
+                  ? 'bg-amber-50 border-amber-200'
+                  : nextPunch === 'voltaAlmoco'
+                    ? 'bg-blue-50 border-blue-300 border-dashed'
+                    : 'bg-slate-50 border-slate-200'
               }`}
             >
-              <p className="text-sm text-gray-500 mb-1">Volta Almoço</p>
-              <p className="text-2xl font-semibold">
+              {nextPunch === 'voltaAlmoco' && !todayPunch?.voltaAlmoco && (
+                <span className="absolute -top-2 -right-2 w-4 h-4 bg-blue-500 rounded-full animate-pulse"></span>
+              )}
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Volta Almoco</span>
+                {todayPunch?.voltaAlmoco && (
+                  <span className="w-6 h-6 bg-amber-500 rounded-full flex items-center justify-center text-white">
+                    <CheckIcon />
+                  </span>
+                )}
+              </div>
+              <p className={`text-3xl font-bold ${todayPunch?.voltaAlmoco ? 'text-slate-800' : 'text-slate-400'}`}>
                 {todayPunch?.voltaAlmoco
-                  ? new Date(todayPunch.voltaAlmoco).toLocaleTimeString('pt-BR', {
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })
+                  ? new Date(todayPunch.voltaAlmoco).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
                   : '--:--'}
               </p>
             </div>
+
+            {/* Saida */}
             <div
-              className={`text-center p-4 rounded-lg ${
-                todayPunch?.saida ? 'bg-red-50' : 'bg-gray-50'
+              className={`relative p-5 rounded-2xl border-2 transition-all duration-300 ${
+                todayPunch?.saida
+                  ? 'bg-red-50 border-red-200'
+                  : nextPunch === 'saida'
+                    ? 'bg-blue-50 border-blue-300 border-dashed'
+                    : 'bg-slate-50 border-slate-200'
               }`}
             >
-              <p className="text-sm text-gray-500 mb-1">Saída</p>
-              <p className="text-2xl font-semibold">
+              {nextPunch === 'saida' && !todayPunch?.saida && (
+                <span className="absolute -top-2 -right-2 w-4 h-4 bg-blue-500 rounded-full animate-pulse"></span>
+              )}
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Saida</span>
+                {todayPunch?.saida && (
+                  <span className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-white">
+                    <CheckIcon />
+                  </span>
+                )}
+              </div>
+              <p className={`text-3xl font-bold ${todayPunch?.saida ? 'text-slate-800' : 'text-slate-400'}`}>
                 {todayPunch?.saida
-                  ? new Date(todayPunch.saida).toLocaleTimeString('pt-BR', {
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })
+                  ? new Date(todayPunch.saida).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
                   : '--:--'}
               </p>
             </div>
