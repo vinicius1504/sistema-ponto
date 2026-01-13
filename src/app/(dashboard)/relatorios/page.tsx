@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { FolhaPonto } from '@/components/relatorio/folha-ponto'
+import { exportFolhaPresenca, getPeriodo20a20 } from '@/lib/export-folha-presenca'
 import html2canvas from 'html2canvas'
 import jsPDF from 'jspdf'
 
@@ -61,20 +62,27 @@ const SearchIcon = () => (
   </svg>
 )
 
+const ExcelIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+  </svg>
+)
+
 export default function RelatoriosPage() {
   const folhaRef = useRef<HTMLDivElement>(null)
   const [loading, setLoading] = useState(false)
   const [exporting, setExporting] = useState(false)
+  const [exportingExcel, setExportingExcel] = useState(false)
   const [registros, setRegistros] = useState<Registro[]>([])
   const [usuario, setUsuario] = useState<Usuario | null>(null)
   const [funcionarios, setFuncionarios] = useState<Funcionario[]>([])
   const [isAdmin, setIsAdmin] = useState(false)
 
+  // Periodo padrao: dia 20 a 20
+  const periodo20a20 = getPeriodo20a20()
   const [filters, setFilters] = useState({
-    dataInicio: new Date(new Date().getFullYear(), new Date().getMonth(), 1)
-      .toISOString()
-      .split('T')[0],
-    dataFim: new Date().toISOString().split('T')[0],
+    dataInicio: periodo20a20.dataInicio,
+    dataFim: periodo20a20.dataFim,
     usuarioId: ''
   })
 
@@ -180,6 +188,34 @@ export default function RelatoriosPage() {
     }
   }
 
+  const handleExportExcel = async () => {
+    if (!usuario) return
+
+    setExportingExcel(true)
+
+    try {
+      const blob = await exportFolhaPresenca(
+        usuario,
+        registros,
+        new Date(filters.dataInicio),
+        new Date(filters.dataFim)
+      )
+
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `folha-presenca-${usuario.nome.replace(/\s/g, '-')}-${filters.dataInicio}-${filters.dataFim}.xlsx`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
+    } catch (error) {
+      console.error('Erro ao exportar Excel:', error)
+    } finally {
+      setExportingExcel(false)
+    }
+  }
+
   return (
     <div className="space-y-6">
       {/* Filtros */}
@@ -245,17 +281,26 @@ export default function RelatoriosPage() {
         </CardContent>
       </Card>
 
-      {/* Botao de Exportar */}
+      {/* Botoes de Exportar */}
       {usuario && registros.length > 0 && (
-        <div className="flex justify-end">
+        <div className="flex justify-end gap-3">
           <Button
             onClick={handleExportPDF}
             disabled={exporting}
             loading={exporting}
-            variant="success"
+            variant="secondary"
             icon={<DownloadIcon />}
           >
-            {exporting ? 'Exportando...' : 'Exportar PDF'}
+            {exporting ? 'Exportando...' : 'Exportar Relatorio'}
+          </Button>
+          <Button
+            onClick={handleExportExcel}
+            disabled={exportingExcel}
+            loading={exportingExcel}
+            variant="success"
+            icon={<ExcelIcon />}
+          >
+            {exportingExcel ? 'Exportando...' : 'Exportar Folha de Presenca'}
           </Button>
         </div>
       )}
