@@ -1,0 +1,66 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Empresa {
+  id        String   @id @default(cuid())
+  nome      String
+  cnpj      String   @unique
+  endereco  String
+  atividade String
+  servico   String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  usuarios Usuario[]
+
+  @@map("empresas")
+}
+
+model Usuario {
+  id                 String   @id @default(cuid())
+  empresaId          String   @map("empresa_id")
+  email              String   @unique
+  senhaHash          String   @map("senha_hash")
+  nome               String
+  codigoFuncionario  String   @map("codigo_funcionario")
+  cargo              String
+  codigoCargo        String   @map("codigo_cargo")
+  departamento       String
+  codigoDepartamento String   @map("codigo_departamento")
+  ctps               String
+  ctpsSerie          String   @map("ctps_serie")
+  pis                String
+  isAdmin            Boolean  @default(false) @map("is_admin")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  empresa  Empresa         @relation(fields: [empresaId], references: [id])
+  registros RegistroPonto[]
+
+  @@map("usuarios")
+}
+
+model RegistroPonto {
+  id          String    @id @default(cuid())
+  usuarioId   String    @map("usuario_id")
+  data        DateTime  @db.Date
+  entrada     DateTime? @db.Time()
+  saidaAlmoco DateTime? @map("saida_almoco") @db.Time()
+  voltaAlmoco DateTime? @map("volta_almoco") @db.Time()
+  saida       DateTime? @db.Time()
+  horasExtras Int       @default(0) @map("horas_extras")
+  observacao  String?
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id])
+
+  @@unique([usuarioId, data])
+  @@map("registros_ponto")
+}
