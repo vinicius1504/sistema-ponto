@@ -1,72 +1,16 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { FolhaPonto } from '@/components/relatorio/folha-ponto'
+import { ReportIcon, DownloadIcon, SearchIcon, ExcelIcon } from '@/components/icons'
 import { exportFolhaPresenca, getPeriodo20a20 } from '@/lib/export-folha-presenca'
+import { authService, pontoService, funcionariosService } from '@/services/api'
 import html2canvas from 'html2canvas'
 import jsPDF from 'jspdf'
-
-interface Registro {
-  data: string
-  entrada: string | null
-  saidaAlmoco: string | null
-  voltaAlmoco: string | null
-  saida: string | null
-  horasExtras: number
-}
-
-interface Usuario {
-  id: string
-  nome: string
-  codigoFuncionario: string
-  cargo: string
-  codigoCargo: string
-  departamento: string
-  codigoDepartamento: string
-  ctps: string
-  ctpsSerie: string
-  pis: string
-  empresa: {
-    nome: string
-    cnpj: string
-    endereco: string
-    atividade: string
-    servico: string | null
-  }
-}
-
-interface Funcionario {
-  id: string
-  nome: string
-  codigoFuncionario: string
-}
-
-const ReportIcon = ({ className = "w-6 h-6 text-blue-600" }: { className?: string }) => (
-  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-  </svg>
-)
-
-const DownloadIcon = () => (
-  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-  </svg>
-)
-
-const SearchIcon = () => (
-  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-  </svg>
-)
-
-const ExcelIcon = () => (
-  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
-  </svg>
-)
+import type { Registro, Usuario, Funcionario } from '@/types'
 
 export default function RelatoriosPage() {
   const folhaRef = useRef<HTMLDivElement>(null)
@@ -78,7 +22,6 @@ export default function RelatoriosPage() {
   const [funcionarios, setFuncionarios] = useState<Funcionario[]>([])
   const [isAdmin, setIsAdmin] = useState(false)
 
-  // Periodo padrao: dia 20 a 20
   const periodo20a20 = getPeriodo20a20()
   const [filters, setFilters] = useState({
     dataInicio: periodo20a20.dataInicio,
@@ -86,57 +29,42 @@ export default function RelatoriosPage() {
     usuarioId: ''
   })
 
-  useEffect(() => {
-    checkAdmin()
-  }, [])
-
-  const checkAdmin = async () => {
+  const checkAdmin = useCallback(async () => {
     try {
-      const response = await fetch('/api/auth/me')
-      if (response.ok) {
-        const data = await response.json()
-        setIsAdmin(data.user.isAdmin)
-        if (data.user.isAdmin) {
-          fetchFuncionarios()
-        }
+      const data = await authService.getMe()
+      setIsAdmin(data.user.isAdmin)
+      if (data.user.isAdmin) {
+        fetchFuncionarios()
       }
     } catch (error) {
       console.error('Erro ao verificar admin:', error)
     }
-  }
+  }, [])
 
   const fetchFuncionarios = async () => {
     try {
-      const response = await fetch('/api/funcionarios')
-      if (response.ok) {
-        const data = await response.json()
-        setFuncionarios(data.funcionarios)
-      }
+      const data = await funcionariosService.getAll()
+      setFuncionarios(data.funcionarios)
     } catch (error) {
       console.error('Erro ao buscar funcionarios:', error)
     }
   }
 
+  useEffect(() => {
+    checkAdmin()
+  }, [checkAdmin])
+
   const handleSearch = async () => {
     setLoading(true)
 
     try {
-      const params = new URLSearchParams({
+      const data = await pontoService.getRelatorio({
         dataInicio: filters.dataInicio,
-        dataFim: filters.dataFim
+        dataFim: filters.dataFim,
+        usuarioId: filters.usuarioId || undefined
       })
-
-      if (filters.usuarioId) {
-        params.append('usuarioId', filters.usuarioId)
-      }
-
-      const response = await fetch(`/api/ponto/relatorio?${params}`)
-
-      if (response.ok) {
-        const data = await response.json()
-        setRegistros(data.registros)
-        setUsuario(data.usuario)
-      }
+      setRegistros(data.registros)
+      setUsuario(data.usuario)
     } catch (error) {
       console.error('Erro ao buscar relatorio:', error)
     } finally {
@@ -150,34 +78,63 @@ export default function RelatoriosPage() {
     setExporting(true)
 
     try {
+      // Captura o elemento exatamente como está no preview
       const canvas = await html2canvas(folhaRef.current, {
         scale: 2,
         useCORS: true,
         logging: false,
-        backgroundColor: '#ffffff'
+        backgroundColor: '#ffffff',
+        allowTaint: true,
+        onclone: (clonedDoc) => {
+          // Força estilos inline no clone para garantir renderização correta
+          const cells = clonedDoc.querySelectorAll('td, th')
+          cells.forEach((cell) => {
+            const el = cell as HTMLElement
+            el.style.display = 'table-cell'
+            el.style.verticalAlign = 'middle'
+            el.style.textAlign = 'center'
+          })
+        }
       })
 
-      const imgData = canvas.toDataURL('image/png')
-      const pdf = new jsPDF('p', 'mm', 'a4')
+      const imgData = canvas.toDataURL('image/png', 1.0)
 
-      const pdfWidth = pdf.internal.pageSize.getWidth()
-      const pdfHeight = pdf.internal.pageSize.getHeight()
+      // Dimensoes A4 em mm
+      const pdfWidth = 210
+      const pdfHeight = 297
 
+      // Criar PDF com tamanho A4
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      })
+
+      // Calcular proporcoes para manter aspecto e preencher a pagina
       const imgWidth = canvas.width
       const imgHeight = canvas.height
+      const imgAspect = imgWidth / imgHeight
+      const pageAspect = pdfWidth / pdfHeight
 
-      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight)
-      const imgX = (pdfWidth - imgWidth * ratio) / 2
-      const imgY = 0
+      let finalWidth: number
+      let finalHeight: number
+      let offsetX = 0
+      let offsetY = 0
 
-      pdf.addImage(
-        imgData,
-        'PNG',
-        imgX,
-        imgY,
-        imgWidth * ratio,
-        imgHeight * ratio
-      )
+      if (imgAspect > pageAspect) {
+        // Imagem mais larga - ajustar pela largura
+        finalWidth = pdfWidth
+        finalHeight = pdfWidth / imgAspect
+        offsetY = (pdfHeight - finalHeight) / 2
+      } else {
+        // Imagem mais alta - ajustar pela altura
+        finalHeight = pdfHeight
+        finalWidth = pdfHeight * imgAspect
+        offsetX = (pdfWidth - finalWidth) / 2
+      }
+
+      // Adicionar imagem centralizada na pagina
+      pdf.addImage(imgData, 'PNG', offsetX, offsetY, finalWidth, finalHeight)
 
       const fileName = `folha-ponto-${usuario.nome.replace(/\s/g, '-')}-${filters.dataInicio}-${filters.dataFim}.pdf`
       pdf.save(fileName)
@@ -281,7 +238,7 @@ export default function RelatoriosPage() {
         </CardContent>
       </Card>
 
-      {/* Botoes de Exportar */}
+      {/* Botao de Exportar */}
       {usuario && registros.length > 0 && (
         <div className="flex justify-end gap-3">
           <Button
@@ -292,15 +249,6 @@ export default function RelatoriosPage() {
             icon={<DownloadIcon />}
           >
             {exporting ? 'Exportando...' : 'Exportar Relatorio'}
-          </Button>
-          <Button
-            onClick={handleExportExcel}
-            disabled={exportingExcel}
-            loading={exportingExcel}
-            variant="success"
-            icon={<ExcelIcon />}
-          >
-            {exportingExcel ? 'Exportando...' : 'Exportar Folha de Presenca'}
           </Button>
         </div>
       )}

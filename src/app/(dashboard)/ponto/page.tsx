@@ -1,59 +1,35 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { ClockIcon, CheckIcon, SuccessIcon, ErrorIcon } from '@/components/icons'
+import { useCurrentTime } from '@/hooks'
+import { pontoService } from '@/services/api'
 import { formatTime, getDayOfWeek, getPunchTypeLabel } from '@/lib/utils'
-
-interface TodayPunch {
-  entrada: string | null
-  saidaAlmoco: string | null
-  voltaAlmoco: string | null
-  saida: string | null
-}
-
-const ClockIcon = ({ className = "w-8 h-8" }: { className?: string }) => (
-  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-  </svg>
-)
-
-const CheckIcon = () => (
-  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-  </svg>
-)
+import type { TodayPunch, PunchType } from '@/types'
 
 export default function PontoPage() {
-  const [currentTime, setCurrentTime] = useState(new Date())
+  const currentTime = useCurrentTime()
   const [todayPunch, setTodayPunch] = useState<TodayPunch | null>(null)
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
-  useEffect(() => {
-    fetchTodayPunch()
-
-    const timer = setInterval(() => {
-      setCurrentTime(new Date())
-    }, 1000)
-
-    return () => clearInterval(timer)
-  }, [])
-
-  const fetchTodayPunch = async () => {
+  const fetchTodayPunch = useCallback(async () => {
     try {
       const today = new Date().toISOString().split('T')[0]
-      const response = await fetch(`/api/ponto?data=${today}`)
-      if (response.ok) {
-        const data = await response.json()
-        setTodayPunch(data.registro)
-      }
+      const data = await pontoService.getTodayPunch(today)
+      setTodayPunch(data.registro)
     } catch (error) {
       console.error('Erro ao buscar ponto:', error)
     }
-  }
+  }, [])
 
-  const getNextPunch = () => {
+  useEffect(() => {
+    fetchTodayPunch()
+  }, [fetchTodayPunch])
+
+  const getNextPunch = (): PunchType => {
     if (!todayPunch) return 'entrada'
     if (!todayPunch.entrada) return 'entrada'
     if (!todayPunch.saidaAlmoco) return 'saidaAlmoco'
@@ -67,21 +43,11 @@ export default function PontoPage() {
     setMessage(null)
 
     try {
-      const response = await fetch('/api/ponto/bater', {
-        method: 'POST'
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        setMessage({ type: 'error', text: data.error })
-        return
-      }
-
+      const data = await pontoService.baterPonto()
       setMessage({ type: 'success', text: data.mensagem })
       fetchTodayPunch()
-    } catch {
-      setMessage({ type: 'error', text: 'Erro ao registrar ponto' })
+    } catch (error) {
+      setMessage({ type: 'error', text: error instanceof Error ? error.message : 'Erro ao registrar ponto' })
     } finally {
       setLoading(false)
     }
@@ -89,6 +55,17 @@ export default function PontoPage() {
 
   const nextPunch = getNextPunch()
   const isCompleto = nextPunch === 'completo'
+
+  const formatPunchTime = (time: string | null) => {
+    if (!time) return '--:--'
+    return new Date(time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+  }
+
+  const getPunchCardStyle = (hasValue: boolean, isNext: boolean, color: string) => {
+    if (hasValue) return `bg-${color}-50 border-${color}-200`
+    if (isNext) return 'bg-blue-50 border-blue-300 border-dashed'
+    return 'bg-slate-50 border-slate-200'
+  }
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
@@ -101,14 +78,14 @@ export default function PontoPage() {
         <CardContent className="relative pt-8 pb-10">
           <div className="text-center">
             <p className="text-blue-100 mb-2">
-              {getDayOfWeek(currentTime)}, {currentTime.toLocaleDateString('pt-BR', {
+              {currentTime && `${getDayOfWeek(currentTime)}, ${currentTime.toLocaleDateString('pt-BR', {
                 day: '2-digit',
                 month: 'long',
                 year: 'numeric'
-              })}
+              })}`}
             </p>
             <p className="text-7xl md:text-8xl font-bold text-white font-mono tracking-tight">
-              {formatTime(currentTime)}
+              {currentTime ? formatTime(currentTime) : '--:--'}
             </p>
             <p className="text-blue-100 mt-4 text-lg">
               Proxima batida: <span className="font-semibold text-white">{getPunchTypeLabel(nextPunch)}</span>
@@ -142,13 +119,9 @@ export default function PontoPage() {
                 }`}
               >
                 {message.type === 'success' ? (
-                  <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
+                  <SuccessIcon className="w-5 h-5 flex-shrink-0" />
                 ) : (
-                  <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
+                  <ErrorIcon className="w-5 h-5 flex-shrink-0" />
                 )}
                 {message.text}
               </div>
@@ -165,119 +138,88 @@ export default function PontoPage() {
         <CardContent>
           <div className="grid grid-cols-2 gap-4">
             {/* Entrada */}
-            <div
-              className={`relative p-5 rounded-2xl border-2 transition-all duration-300 ${
-                todayPunch?.entrada
-                  ? 'bg-emerald-50 border-emerald-200'
-                  : nextPunch === 'entrada'
-                    ? 'bg-blue-50 border-blue-300 border-dashed'
-                    : 'bg-slate-50 border-slate-200'
-              }`}
-            >
-              {nextPunch === 'entrada' && !todayPunch?.entrada && (
-                <span className="absolute -top-2 -right-2 w-4 h-4 bg-blue-500 rounded-full animate-pulse"></span>
-              )}
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Entrada</span>
-                {todayPunch?.entrada && (
-                  <span className="w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center text-white">
-                    <CheckIcon />
-                  </span>
-                )}
-              </div>
-              <p className={`text-3xl font-bold ${todayPunch?.entrada ? 'text-slate-800' : 'text-slate-400'}`}>
-                {todayPunch?.entrada
-                  ? new Date(todayPunch.entrada).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
-                  : '--:--'}
-              </p>
-            </div>
+            <PunchCard
+              label="Entrada"
+              time={formatPunchTime(todayPunch?.entrada ?? null)}
+              hasValue={!!todayPunch?.entrada}
+              isNext={nextPunch === 'entrada'}
+              color="emerald"
+            />
 
             {/* Saida Almoco */}
-            <div
-              className={`relative p-5 rounded-2xl border-2 transition-all duration-300 ${
-                todayPunch?.saidaAlmoco
-                  ? 'bg-amber-50 border-amber-200'
-                  : nextPunch === 'saidaAlmoco'
-                    ? 'bg-blue-50 border-blue-300 border-dashed'
-                    : 'bg-slate-50 border-slate-200'
-              }`}
-            >
-              {nextPunch === 'saidaAlmoco' && !todayPunch?.saidaAlmoco && (
-                <span className="absolute -top-2 -right-2 w-4 h-4 bg-blue-500 rounded-full animate-pulse"></span>
-              )}
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Saida Almoco</span>
-                {todayPunch?.saidaAlmoco && (
-                  <span className="w-6 h-6 bg-amber-500 rounded-full flex items-center justify-center text-white">
-                    <CheckIcon />
-                  </span>
-                )}
-              </div>
-              <p className={`text-3xl font-bold ${todayPunch?.saidaAlmoco ? 'text-slate-800' : 'text-slate-400'}`}>
-                {todayPunch?.saidaAlmoco
-                  ? new Date(todayPunch.saidaAlmoco).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
-                  : '--:--'}
-              </p>
-            </div>
+            <PunchCard
+              label="Saida Almoco"
+              time={formatPunchTime(todayPunch?.saidaAlmoco ?? null)}
+              hasValue={!!todayPunch?.saidaAlmoco}
+              isNext={nextPunch === 'saidaAlmoco'}
+              color="amber"
+            />
 
             {/* Volta Almoco */}
-            <div
-              className={`relative p-5 rounded-2xl border-2 transition-all duration-300 ${
-                todayPunch?.voltaAlmoco
-                  ? 'bg-amber-50 border-amber-200'
-                  : nextPunch === 'voltaAlmoco'
-                    ? 'bg-blue-50 border-blue-300 border-dashed'
-                    : 'bg-slate-50 border-slate-200'
-              }`}
-            >
-              {nextPunch === 'voltaAlmoco' && !todayPunch?.voltaAlmoco && (
-                <span className="absolute -top-2 -right-2 w-4 h-4 bg-blue-500 rounded-full animate-pulse"></span>
-              )}
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Volta Almoco</span>
-                {todayPunch?.voltaAlmoco && (
-                  <span className="w-6 h-6 bg-amber-500 rounded-full flex items-center justify-center text-white">
-                    <CheckIcon />
-                  </span>
-                )}
-              </div>
-              <p className={`text-3xl font-bold ${todayPunch?.voltaAlmoco ? 'text-slate-800' : 'text-slate-400'}`}>
-                {todayPunch?.voltaAlmoco
-                  ? new Date(todayPunch.voltaAlmoco).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
-                  : '--:--'}
-              </p>
-            </div>
+            <PunchCard
+              label="Volta Almoco"
+              time={formatPunchTime(todayPunch?.voltaAlmoco ?? null)}
+              hasValue={!!todayPunch?.voltaAlmoco}
+              isNext={nextPunch === 'voltaAlmoco'}
+              color="amber"
+            />
 
             {/* Saida */}
-            <div
-              className={`relative p-5 rounded-2xl border-2 transition-all duration-300 ${
-                todayPunch?.saida
-                  ? 'bg-red-50 border-red-200'
-                  : nextPunch === 'saida'
-                    ? 'bg-blue-50 border-blue-300 border-dashed'
-                    : 'bg-slate-50 border-slate-200'
-              }`}
-            >
-              {nextPunch === 'saida' && !todayPunch?.saida && (
-                <span className="absolute -top-2 -right-2 w-4 h-4 bg-blue-500 rounded-full animate-pulse"></span>
-              )}
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Saida</span>
-                {todayPunch?.saida && (
-                  <span className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-white">
-                    <CheckIcon />
-                  </span>
-                )}
-              </div>
-              <p className={`text-3xl font-bold ${todayPunch?.saida ? 'text-slate-800' : 'text-slate-400'}`}>
-                {todayPunch?.saida
-                  ? new Date(todayPunch.saida).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
-                  : '--:--'}
-              </p>
-            </div>
+            <PunchCard
+              label="Saida"
+              time={formatPunchTime(todayPunch?.saida ?? null)}
+              hasValue={!!todayPunch?.saida}
+              isNext={nextPunch === 'saida'}
+              color="red"
+            />
           </div>
         </CardContent>
       </Card>
+    </div>
+  )
+}
+
+interface PunchCardProps {
+  label: string
+  time: string
+  hasValue: boolean
+  isNext: boolean
+  color: 'emerald' | 'amber' | 'red'
+}
+
+function PunchCard({ label, time, hasValue, isNext, color }: PunchCardProps) {
+  const colorMap = {
+    emerald: { bg: 'bg-emerald-50', border: 'border-emerald-200', check: 'bg-emerald-500' },
+    amber: { bg: 'bg-amber-50', border: 'border-amber-200', check: 'bg-amber-500' },
+    red: { bg: 'bg-red-50', border: 'border-red-200', check: 'bg-red-500' }
+  }
+
+  const colors = colorMap[color]
+
+  return (
+    <div
+      className={`relative p-5 rounded-2xl border-2 transition-all duration-300 ${
+        hasValue
+          ? `${colors.bg} ${colors.border}`
+          : isNext
+            ? 'bg-blue-50 border-blue-300 border-dashed'
+            : 'bg-slate-50 border-slate-200'
+      }`}
+    >
+      {isNext && !hasValue && (
+        <span className="absolute -top-2 -right-2 w-4 h-4 bg-blue-500 rounded-full animate-pulse"></span>
+      )}
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">{label}</span>
+        {hasValue && (
+          <span className={`w-6 h-6 ${colors.check} rounded-full flex items-center justify-center text-white`}>
+            <CheckIcon />
+          </span>
+        )}
+      </div>
+      <p className={`text-3xl font-bold ${hasValue ? 'text-slate-800' : 'text-slate-400'}`}>
+        {time}
+      </p>
     </div>
   )
 }

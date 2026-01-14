@@ -5,12 +5,8 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-
-const ClockIcon = () => (
-  <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-  </svg>
-)
+import { ClockIcon, CheckIcon, ErrorIcon } from '@/components/icons'
+import { authService } from '@/services/api'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -27,23 +23,11 @@ export default function LoginPage() {
     setError('')
 
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        setError(data.error || 'Erro ao fazer login')
-        return
-      }
-
+      await authService.login(formData.email, formData.senha)
       router.push('/dashboard')
       router.refresh()
-    } catch {
-      setError('Erro ao conectar com o servidor')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao conectar com o servidor')
     } finally {
       setLoading(false)
     }
@@ -61,7 +45,7 @@ export default function LoginPage() {
 
         <div className="relative z-10 flex flex-col justify-center items-center w-full px-12">
           <div className="w-24 h-24 bg-white/20 rounded-3xl flex items-center justify-center mb-8 backdrop-blur-sm">
-            <ClockIcon />
+            <ClockIcon className="w-12 h-12 text-white" />
           </div>
           <h1 className="text-4xl font-bold text-white mb-4 text-center">
             Sistema de Ponto
@@ -72,30 +56,9 @@ export default function LoginPage() {
 
           {/* Features List */}
           <div className="mt-12 space-y-4">
-            <div className="flex items-center gap-4 text-white/90">
-              <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-              <span>Registro de ponto facil e rapido</span>
-            </div>
-            <div className="flex items-center gap-4 text-white/90">
-              <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-              <span>Relatorios completos em PDF</span>
-            </div>
-            <div className="flex items-center gap-4 text-white/90">
-              <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-              <span>Gestao de funcionarios</span>
-            </div>
+            <FeatureItem text="Registro de ponto facil e rapido" />
+            <FeatureItem text="Relatorios completos em PDF" />
+            <FeatureItem text="Gestao de funcionarios" />
           </div>
         </div>
       </div>
@@ -106,9 +69,7 @@ export default function LoginPage() {
           {/* Mobile Logo */}
           <div className="lg:hidden text-center mb-8">
             <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
+              <ClockIcon className="w-8 h-8 text-white" />
             </div>
             <h1 className="text-2xl font-bold text-slate-800">Sistema de Ponto</h1>
           </div>
@@ -122,9 +83,7 @@ export default function LoginPage() {
             <form onSubmit={handleSubmit} className="space-y-5">
               {error && (
                 <div className="p-4 bg-red-50 border border-red-200 text-red-600 rounded-xl text-sm flex items-center gap-3">
-                  <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
+                  <ErrorIcon className="w-5 h-5 flex-shrink-0" />
                   {error}
                 </div>
               )}
@@ -173,6 +132,17 @@ export default function LoginPage() {
           </p>
         </div>
       </div>
+    </div>
+  )
+}
+
+function FeatureItem({ text }: { text: string }) {
+  return (
+    <div className="flex items-center gap-4 text-white/90">
+      <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+        <CheckIcon className="w-5 h-5" />
+      </div>
+      <span>{text}</span>
     </div>
   )
 }

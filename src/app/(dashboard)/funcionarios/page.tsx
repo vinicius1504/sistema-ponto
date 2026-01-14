@@ -1,9 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { UsersIcon, PlusIcon, ErrorIcon, SuccessIcon } from '@/components/icons'
+import { funcionariosService } from '@/services/api'
 
 interface Funcionario {
   id: string
@@ -20,17 +22,20 @@ interface Funcionario {
   isAdmin: boolean
 }
 
-const UsersIcon = ({ className = "w-6 h-6 text-blue-600" }: { className?: string }) => (
-  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-  </svg>
-)
-
-const PlusIcon = () => (
-  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-  </svg>
-)
+const initialFormData = {
+  email: '',
+  senha: '',
+  nome: '',
+  codigoFuncionario: '',
+  cargo: '',
+  codigoCargo: '',
+  departamento: '',
+  codigoDepartamento: '',
+  ctps: '',
+  ctpsSerie: '',
+  pis: '',
+  isAdmin: false
+}
 
 export default function FuncionariosPage() {
   const [funcionarios, setFuncionarios] = useState<Funcionario[]>([])
@@ -38,37 +43,20 @@ export default function FuncionariosPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const [formData, setFormData] = useState(initialFormData)
 
-  const [formData, setFormData] = useState({
-    email: '',
-    senha: '',
-    nome: '',
-    codigoFuncionario: '',
-    cargo: '',
-    codigoCargo: '',
-    departamento: '',
-    codigoDepartamento: '',
-    ctps: '',
-    ctpsSerie: '',
-    pis: '',
-    isAdmin: false
-  })
-
-  useEffect(() => {
-    fetchFuncionarios()
-  }, [])
-
-  const fetchFuncionarios = async () => {
+  const fetchFuncionarios = useCallback(async () => {
     try {
-      const response = await fetch('/api/funcionarios')
-      if (response.ok) {
-        const data = await response.json()
-        setFuncionarios(data.funcionarios)
-      }
+      const data = await funcionariosService.getAll()
+      setFuncionarios(data.funcionarios as Funcionario[])
     } catch (error) {
       console.error('Erro ao buscar funcionarios:', error)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    fetchFuncionarios()
+  }, [fetchFuncionarios])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -77,38 +65,13 @@ export default function FuncionariosPage() {
     setSuccess('')
 
     try {
-      const response = await fetch('/api/funcionarios', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        setError(data.error)
-        return
-      }
-
+      await funcionariosService.create(formData as Parameters<typeof funcionariosService.create>[0])
       setSuccess('Funcionario cadastrado com sucesso!')
       setShowForm(false)
-      setFormData({
-        email: '',
-        senha: '',
-        nome: '',
-        codigoFuncionario: '',
-        cargo: '',
-        codigoCargo: '',
-        departamento: '',
-        codigoDepartamento: '',
-        ctps: '',
-        ctpsSerie: '',
-        pis: '',
-        isAdmin: false
-      })
+      setFormData(initialFormData)
       fetchFuncionarios()
-    } catch {
-      setError('Erro ao cadastrar funcionario')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao cadastrar funcionario')
     } finally {
       setLoading(false)
     }
@@ -129,18 +92,14 @@ export default function FuncionariosPage() {
 
       {error && (
         <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl flex items-center gap-3">
-          <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
+          <ErrorIcon className="w-5 h-5 flex-shrink-0" />
           {error}
         </div>
       )}
 
       {success && (
         <div className="p-4 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl flex items-center gap-3">
-          <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
+          <SuccessIcon className="w-5 h-5 flex-shrink-0" />
           {success}
         </div>
       )}
