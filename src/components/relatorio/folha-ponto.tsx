@@ -119,51 +119,51 @@ const FolhaPonto = forwardRef<HTMLDivElement, FolhaPontoProps>(
 
           <div className="grid grid-cols-2 gap-0">
             {/* Coluna Esquerda */}
-            <div className="border-r border-black p-2 space-y-1">
+            <div className="p-2 space-y-1 font-bold uppercase">
               <div>
-                <span className="font-bold">Empresa: </span>
+                <span>Empresa: </span>
                 {usuario.empresa.nome}
               </div>
               <div>
-                <span className="font-bold">Servico: </span>
+                <span>Servico: </span>
                 {usuario.empresa.servico || usuario.empresa.nome}
               </div>
               <div>
-                <span className="font-bold">Atividade: </span>
+                <span>Atividade: </span>
                 {usuario.empresa.atividade}
               </div>
               <div>
-                <span className="font-bold">Endereco: </span>
+                <span>Endereco: </span>
                 {usuario.empresa.endereco}
               </div>
               <div>
-                <span className="font-bold">Funcionario: </span>
+                <span>Funcionario: </span>
                 {usuario.codigoFuncionario} - {usuario.nome}
               </div>
               <div>
-                <span className="font-bold">Cargo: </span>
+                <span>Cargo: </span>
                 {usuario.codigoCargo} - {usuario.cargo}
               </div>
             </div>
 
             {/* Coluna Direita */}
-            <div className="p-2 space-y-1">
+            <div className="p-2 space-y-1 font-bold uppercase">
               <div>
-                <span className="font-bold">CNPJ/CPF: </span>
+                <span>CNPJ/CPF: </span>
                 {usuario.empresa.cnpj}
               </div>
               <div>&nbsp;</div>
               <div>&nbsp;</div>
               <div>
-                <span className="font-bold">CTPS/Serie: </span>
+                <span>CTPS/Serie: </span>
                 {usuario.ctps}/{usuario.ctpsSerie}
               </div>
               <div>
-                <span className="font-bold">Depto: </span>
+                <span>Depto: </span>
                 {usuario.codigoDepartamento} - {usuario.departamento}
               </div>
               <div>
-                <span className="font-bold">PIS: </span>
+                <span>PIS: </span>
                 {usuario.pis}
               </div>
             </div>
@@ -173,67 +173,69 @@ const FolhaPonto = forwardRef<HTMLDivElement, FolhaPontoProps>(
         {/* Tabela de Registros */}
         <table className="w-full border-collapse mt-0 border border-black">
           <thead>
-            <tr>
+            <tr style={{ height: '24px' }}>
               <th
                 colSpan={2}
-                className="border border-black p-1 text-center font-bold"
+                className="border border-black text-center font-bold"
+                style={{ verticalAlign: 'middle', padding: '2px' }}
               >
                 Dias
               </th>
               <th
-                colSpan={3}
-                className="border border-black p-1 text-center font-bold"
+                colSpan={4}
+                className="border border-black text-center font-bold"
+                style={{ verticalAlign: 'middle', padding: '2px' }}
               >
                 Normal
               </th>
-              <th className="border border-black p-1 text-center font-bold">
+              <th className="border border-black text-center font-bold" style={{ verticalAlign: 'middle', padding: '2px' }}>
                 Extra
               </th>
-              <th className="border border-black p-1 text-center font-bold">
+              <th className="border border-black text-center font-bold" style={{ verticalAlign: 'middle', padding: '2px' }}>
                 Assinatura
               </th>
             </tr>
-            <tr>
-              <th className="border border-black p-1 w-8"></th>
-              <th className="border border-black p-1 w-10"></th>
-              <th className="border border-black p-1 text-center">Inicio</th>
-              <th className="border border-black p-1 text-center">Intervalo</th>
-              <th className="border border-black p-1 text-center">Termino</th>
-              <th className="border border-black p-1 w-16"></th>
-              <th className="border border-black p-1 w-32"></th>
+            <tr style={{ height: '20px' }}>
+              <th className="border border-black w-8" style={{ verticalAlign: 'middle', padding: '2px' }}></th>
+              <th className="border border-black w-10" style={{ verticalAlign: 'middle', padding: '2px' }}></th>
+              <th className="border border-black text-center" style={{ verticalAlign: 'middle', padding: '2px' }}>Inicio</th>
+              <th className="border border-black text-center border-r-2" style={{ verticalAlign: 'middle', padding: '2px' }}>Saida</th>
+              <th className="border border-black text-center border-l-0" style={{ verticalAlign: 'middle', padding: '2px' }}>Volta</th>
+              <th className="border border-black text-center" style={{ verticalAlign: 'middle', padding: '2px' }}>Termino</th>
+              <th className="border border-black w-16" style={{ verticalAlign: 'middle', padding: '2px' }}></th>
+              <th className="border border-black w-32" style={{ verticalAlign: 'middle', padding: '2px' }}></th>
             </tr>
           </thead>
           <tbody>
             {days.map((day) => {
               const registro = getRegistroForDate(day)
-              const intervalo =
-                registro?.saidaAlmoco && registro?.voltaAlmoco
-                  ? `${formatTimeFromString(registro.saidaAlmoco)} ${formatTimeFromString(registro.voltaAlmoco)}`
-                  : ''
 
               return (
-                <tr key={day.toISOString()}>
-                  <td className="border border-black p-1 text-center">
+                <tr key={day.toISOString()} style={{ height: '20px' }}>
+                  <td className="border border-black text-center" style={{ verticalAlign: 'middle', padding: '2px' }}>
                     {day.getDate().toString().padStart(2, '0')}
                   </td>
-                  <td className="border border-black p-1 text-center">
+                  <td className="border border-black text-center" style={{ verticalAlign: 'middle', padding: '2px' }}>
                     {getDayOfWeek(day)}
                   </td>
-                  <td className="border border-black p-1 text-center">
+                  <td className="border border-black text-center" style={{ verticalAlign: 'middle', padding: '2px' }}>
                     {formatTimeFromString(registro?.entrada || null)}
                   </td>
-                  <td className="border border-black p-1 text-center">
-                    {intervalo}
+                  <td className="border border-black text-center border-r-2" style={{ verticalAlign: 'middle', padding: '2px' }}>
+                    {formatTimeFromString(registro?.saidaAlmoco || null)}
                   </td>
-                  <td className="border border-black p-1 text-center">
+                  <td className="border border-black text-center border-l-0" style={{ verticalAlign: 'middle', padding: '2px' }}>
+                    {formatTimeFromString(registro?.voltaAlmoco || null)}
+                  </td>
+                  <td className="border border-black text-center" style={{ verticalAlign: 'middle', padding: '2px' }}>
                     {formatTimeFromString(registro?.saida || null)}
                   </td>
-                  <td className="border border-black p-1 text-center">
+                  <td className="border border-black text-center" style={{ verticalAlign: 'middle', padding: '2px' }}>
                     {registro?.horasExtras
                       ? minutesToHoursString(registro.horasExtras)
                       : ''}
                   </td>
-                  <td className="border border-black p-1">&nbsp;</td>
+                  <td className="border border-black" style={{ verticalAlign: 'middle', padding: '2px' }}>&nbsp;</td>
                 </tr>
               )
             })}
@@ -243,49 +245,49 @@ const FolhaPonto = forwardRef<HTMLDivElement, FolhaPontoProps>(
         {/* Totalizadores */}
         <table className="w-full border-collapse border border-black mt-0">
           <tbody>
-            <tr>
-              <td className="border border-black p-1 w-1/2">
+            <tr style={{ height: '20px' }}>
+              <td className="border border-black w-1/2 text-center" style={{ verticalAlign: 'middle', padding: '2px' }}>
                 <span className="font-bold">Tot. Horas Trabalhadas</span>
               </td>
-              <td className="border border-black p-1">
+              <td className="border border-black text-center" style={{ verticalAlign: 'middle', padding: '2px' }}>
                 {minutesToHoursString(totalHoras)}
               </td>
-              <td className="border border-black p-1 w-1/4">
+              <td className="border border-black w-1/4 text-center" style={{ verticalAlign: 'middle', padding: '2px' }}>
                 <span className="font-bold">Tot. Horas Extras</span>
               </td>
-              <td className="border border-black p-1">
+              <td className="border border-black text-center" style={{ verticalAlign: 'middle', padding: '2px' }}>
                 {minutesToHoursString(totalExtras)}
               </td>
             </tr>
-            <tr>
-              <td className="border border-black p-1">
+            <tr style={{ height: '20px' }}>
+              <td className="border border-black text-center" style={{ verticalAlign: 'middle', padding: '2px' }}>
                 <span className="font-bold">Intrajornada</span>
               </td>
-              <td className="border border-black p-1"></td>
-              <td className="border border-black p-1">
+              <td className="border border-black text-center" style={{ verticalAlign: 'middle', padding: '2px' }}></td>
+              <td className="border border-black text-center" style={{ verticalAlign: 'middle', padding: '2px' }}>
                 <span className="font-bold">Gratificacao</span>
               </td>
-              <td className="border border-black p-1"></td>
+              <td className="border border-black text-center" style={{ verticalAlign: 'middle', padding: '2px' }}></td>
             </tr>
-            <tr>
-              <td className="border border-black p-1">
+            <tr style={{ height: '20px' }}>
+              <td className="border border-black text-center" style={{ verticalAlign: 'middle', padding: '2px' }}>
                 <span className="font-bold">Adicional Noturno</span>
               </td>
-              <td className="border border-black p-1"></td>
-              <td className="border border-black p-1">
+              <td className="border border-black text-center" style={{ verticalAlign: 'middle', padding: '2px' }}></td>
+              <td className="border border-black text-center" style={{ verticalAlign: 'middle', padding: '2px' }}>
                 <span className="font-bold">Assiduidade</span>
               </td>
-              <td className="border border-black p-1"></td>
+              <td className="border border-black text-center" style={{ verticalAlign: 'middle', padding: '2px' }}></td>
             </tr>
-            <tr>
-              <td className="border border-black p-1">
+            <tr style={{ height: '20px' }}>
+              <td className="border border-black text-center" style={{ verticalAlign: 'middle', padding: '2px' }}>
                 <span className="font-bold">Horas Noturnas Reduzidas</span>
               </td>
-              <td className="border border-black p-1"></td>
-              <td className="border border-black p-1">
+              <td className="border border-black text-center" style={{ verticalAlign: 'middle', padding: '2px' }}></td>
+              <td className="border border-black text-center" style={{ verticalAlign: 'middle', padding: '2px' }}>
                 <span className="font-bold">Vale Alimentacao</span>
               </td>
-              <td className="border border-black p-1"></td>
+              <td className="border border-black text-center" style={{ verticalAlign: 'middle', padding: '2px' }}></td>
             </tr>
           </tbody>
         </table>

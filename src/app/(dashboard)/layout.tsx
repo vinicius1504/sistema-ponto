@@ -67,10 +67,11 @@ export default function DashboardLayout({
   const pathname = usePathname()
   const [user, setUser] = useState<User | null>(null)
   const [sidebarOpen, setSidebarOpen] = useState(true)
-  const [currentTime, setCurrentTime] = useState(new Date())
+  const [currentTime, setCurrentTime] = useState<Date | null>(null)
 
   useEffect(() => {
     fetchUser()
+    setCurrentTime(new Date()) // Define o horário inicial no cliente
     const timer = setInterval(() => setCurrentTime(new Date()), 1000)
     return () => clearInterval(timer)
   }, [])
@@ -211,18 +212,18 @@ export default function DashboardLayout({
             {/* Relogio */}
             <div className="text-right hidden md:block">
               <p className="text-2xl font-bold text-slate-800 font-mono">
-                {currentTime.toLocaleTimeString('pt-BR', {
+                {currentTime ? currentTime.toLocaleTimeString('pt-BR', {
                   hour: '2-digit',
                   minute: '2-digit',
                   second: '2-digit'
-                })}
+                }) : '--:--:--'}
               </p>
               <p className="text-xs text-slate-500">
-                {currentTime.toLocaleDateString('pt-BR', {
+                {currentTime ? currentTime.toLocaleDateString('pt-BR', {
                   weekday: 'long',
                   day: '2-digit',
                   month: 'short'
-                })}
+                }) : '---'}
               </p>
             </div>
 

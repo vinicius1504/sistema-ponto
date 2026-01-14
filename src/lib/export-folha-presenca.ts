@@ -174,20 +174,20 @@ export async function exportFolhaPresenca(
   // === DADOS DA EMPRESA E FUNCIONARIO (sem bordas internas) ===
   // Linha: Empresa e CNPJ
   sheet.mergeCells(`A${row}:D${row}`)
-  sheet.getCell(`A${row}`).value = `Empresa: ${usuario.empresa.nome.toUpperCase()}`
-  sheet.getCell(`A${row}`).font = normalFont
+  sheet.getCell(`A${row}`).value = `EMPRESA: ${usuario.empresa.nome.toUpperCase()}`
+  sheet.getCell(`A${row}`).font = boldFont
   sheet.getCell(`A${row}`).border = { left: { style: 'thin' } }
 
   sheet.mergeCells(`E${row}:H${row}`)
-  sheet.getCell(`E${row}`).value = `CNPJ/CPF: ${usuario.empresa.cnpj}`
-  sheet.getCell(`E${row}`).font = normalFont
+  sheet.getCell(`E${row}`).value = `CNPJ/CPF: ${usuario.empresa.cnpj.toUpperCase()}`
+  sheet.getCell(`E${row}`).font = boldFont
   sheet.getCell(`H${row}`).border = { right: { style: 'thin' } }
   row++
 
   // Linha: Servico
   sheet.mergeCells(`A${row}:D${row}`)
-  sheet.getCell(`A${row}`).value = `Servico: ${(usuario.empresa.servico || usuario.empresa.nome).toUpperCase()}`
-  sheet.getCell(`A${row}`).font = normalFont
+  sheet.getCell(`A${row}`).value = `SERVICO: ${(usuario.empresa.servico || usuario.empresa.nome).toUpperCase()}`
+  sheet.getCell(`A${row}`).font = boldFont
   sheet.getCell(`A${row}`).border = { left: { style: 'thin' } }
 
   sheet.mergeCells(`E${row}:H${row}`)
@@ -197,8 +197,8 @@ export async function exportFolhaPresenca(
 
   // Linha: Atividade
   sheet.mergeCells(`A${row}:D${row}`)
-  sheet.getCell(`A${row}`).value = `Atividade: ${usuario.empresa.atividade}`
-  sheet.getCell(`A${row}`).font = normalFont
+  sheet.getCell(`A${row}`).value = `ATIVIDADE: ${usuario.empresa.atividade.toUpperCase()}`
+  sheet.getCell(`A${row}`).font = boldFont
   sheet.getCell(`A${row}`).border = { left: { style: 'thin' } }
 
   sheet.mergeCells(`E${row}:H${row}`)
@@ -208,40 +208,40 @@ export async function exportFolhaPresenca(
 
   // Linha: Endereco e CTPS
   sheet.mergeCells(`A${row}:D${row}`)
-  sheet.getCell(`A${row}`).value = `Endereco: ${usuario.empresa.endereco}`
-  sheet.getCell(`A${row}`).font = normalFont
+  sheet.getCell(`A${row}`).value = `ENDERECO: ${usuario.empresa.endereco.toUpperCase()}`
+  sheet.getCell(`A${row}`).font = boldFont
   sheet.getCell(`A${row}`).border = { left: { style: 'thin' } }
 
   sheet.mergeCells(`E${row}:H${row}`)
-  sheet.getCell(`E${row}`).value = `CTPS/Serie: ${usuario.ctps}/${usuario.ctpsSerie}`
-  sheet.getCell(`E${row}`).font = normalFont
+  sheet.getCell(`E${row}`).value = `CTPS/SERIE: ${usuario.ctps.toUpperCase()}/${usuario.ctpsSerie.toUpperCase()}`
+  sheet.getCell(`E${row}`).font = boldFont
   sheet.getCell(`H${row}`).border = { right: { style: 'thin' } }
   row++
 
   // Linha: Funcionario e Depto
   sheet.mergeCells(`A${row}:D${row}`)
-  sheet.getCell(`A${row}`).value = `Funcionario: ${usuario.codigoFuncionario} - ${usuario.nome.toUpperCase()}`
-  sheet.getCell(`A${row}`).font = normalFont
+  sheet.getCell(`A${row}`).value = `FUNCIONARIO: ${usuario.codigoFuncionario.toUpperCase()} - ${usuario.nome.toUpperCase()}`
+  sheet.getCell(`A${row}`).font = boldFont
   sheet.getCell(`A${row}`).border = { left: { style: 'thin' } }
 
   sheet.mergeCells(`E${row}:H${row}`)
-  sheet.getCell(`E${row}`).value = `Depto: ${usuario.codigoDepartamento} - ${usuario.departamento.toUpperCase()}`
-  sheet.getCell(`E${row}`).font = normalFont
+  sheet.getCell(`E${row}`).value = `DEPTO: ${usuario.codigoDepartamento.toUpperCase()} - ${usuario.departamento.toUpperCase()}`
+  sheet.getCell(`E${row}`).font = boldFont
   sheet.getCell(`H${row}`).border = { right: { style: 'thin' } }
   row++
 
   // Linha: Cargo e PIS
   sheet.mergeCells(`A${row}:D${row}`)
-  sheet.getCell(`A${row}`).value = `Cargo: ${usuario.codigoCargo} - ${usuario.cargo.toUpperCase()}`
-  sheet.getCell(`A${row}`).font = normalFont
+  sheet.getCell(`A${row}`).value = `CARGO: ${usuario.codigoCargo.toUpperCase()} - ${usuario.cargo.toUpperCase()}`
+  sheet.getCell(`A${row}`).font = boldFont
   sheet.getCell(`A${row}`).border = { left: { style: 'thin' }, bottom: { style: 'thin' } }
   sheet.getCell(`B${row}`).border = { bottom: { style: 'thin' } }
   sheet.getCell(`C${row}`).border = { bottom: { style: 'thin' } }
   sheet.getCell(`D${row}`).border = { bottom: { style: 'thin' } }
 
   sheet.mergeCells(`E${row}:H${row}`)
-  sheet.getCell(`E${row}`).value = `PIS: ${usuario.pis}`
-  sheet.getCell(`E${row}`).font = normalFont
+  sheet.getCell(`E${row}`).value = `PIS: ${usuario.pis.toUpperCase()}`
+  sheet.getCell(`E${row}`).font = boldFont
   sheet.getCell(`E${row}`).border = { bottom: { style: 'thin' } }
   sheet.getCell(`F${row}`).border = { bottom: { style: 'thin' } }
   sheet.getCell(`G${row}`).border = { bottom: { style: 'thin' } }
@@ -291,14 +291,12 @@ export async function exportFolhaPresenca(
   sheet.getCell(`C${row}`).alignment = { horizontal: 'center' }
   sheet.getCell(`C${row}`).border = borderThin
 
-  // Intervalo dividido em duas colunas
+  // Intervalo - titulo mesclado, dados separados
+  sheet.mergeCells(`D${row}:E${row}`)
   sheet.getCell(`D${row}`).value = 'Intervalo'
   sheet.getCell(`D${row}`).font = boldFont
   sheet.getCell(`D${row}`).alignment = { horizontal: 'center' }
-  sheet.getCell(`D${row}`).border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' } }
-
-  sheet.getCell(`E${row}`).value = ''
-  sheet.getCell(`E${row}`).border = { top: { style: 'thin' }, right: { style: 'thin' }, bottom: { style: 'thin' } }
+  sheet.getCell(`D${row}`).border = borderThin
 
   sheet.getCell(`F${row}`).value = 'Termino'
   sheet.getCell(`F${row}`).font = boldFont
@@ -319,39 +317,39 @@ export async function exportFolhaPresenca(
     const registro = getRegistroForDate(registros, day)
 
     sheet.getCell(`A${row}`).value = day.getDate().toString().padStart(2, '0')
-    sheet.getCell(`A${row}`).alignment = { horizontal: 'center' }
+    sheet.getCell(`A${row}`).alignment = { horizontal: 'center', vertical: 'middle' }
     sheet.getCell(`A${row}`).border = borderThin
     sheet.getCell(`A${row}`).font = normalFont
 
     sheet.getCell(`B${row}`).value = getDayOfWeek(day)
-    sheet.getCell(`B${row}`).alignment = { horizontal: 'center' }
+    sheet.getCell(`B${row}`).alignment = { horizontal: 'center', vertical: 'middle' }
     sheet.getCell(`B${row}`).border = borderThin
     sheet.getCell(`B${row}`).font = normalFont
 
     sheet.getCell(`C${row}`).value = formatTimeFromString(registro?.entrada || null)
-    sheet.getCell(`C${row}`).alignment = { horizontal: 'center' }
+    sheet.getCell(`C${row}`).alignment = { horizontal: 'center', vertical: 'middle' }
     sheet.getCell(`C${row}`).border = borderThin
     sheet.getCell(`C${row}`).font = normalFont
 
     // Intervalo - Saida Almoco (com linha divisoria)
     sheet.getCell(`D${row}`).value = formatTimeFromString(registro?.saidaAlmoco || null)
-    sheet.getCell(`D${row}`).alignment = { horizontal: 'center' }
+    sheet.getCell(`D${row}`).alignment = { horizontal: 'center', vertical: 'middle' }
     sheet.getCell(`D${row}`).border = borderThin
     sheet.getCell(`D${row}`).font = normalFont
 
     // Intervalo - Volta Almoco (com linha divisoria)
     sheet.getCell(`E${row}`).value = formatTimeFromString(registro?.voltaAlmoco || null)
-    sheet.getCell(`E${row}`).alignment = { horizontal: 'center' }
+    sheet.getCell(`E${row}`).alignment = { horizontal: 'center', vertical: 'middle' }
     sheet.getCell(`E${row}`).border = borderThin
     sheet.getCell(`E${row}`).font = normalFont
 
     sheet.getCell(`F${row}`).value = formatTimeFromString(registro?.saida || null)
-    sheet.getCell(`F${row}`).alignment = { horizontal: 'center' }
+    sheet.getCell(`F${row}`).alignment = { horizontal: 'center', vertical: 'middle' }
     sheet.getCell(`F${row}`).border = borderThin
     sheet.getCell(`F${row}`).font = normalFont
 
     sheet.getCell(`G${row}`).value = registro?.horasExtras ? minutesToHoursString(registro.horasExtras) : ''
-    sheet.getCell(`G${row}`).alignment = { horizontal: 'center' }
+    sheet.getCell(`G${row}`).alignment = { horizontal: 'center', vertical: 'middle' }
     sheet.getCell(`G${row}`).border = borderThin
     sheet.getCell(`G${row}`).font = normalFont
 
@@ -369,19 +367,23 @@ export async function exportFolhaPresenca(
   sheet.mergeCells(`A${row}:C${row}`)
   sheet.getCell(`A${row}`).value = 'Tot. Horas Trabalhadas'
   sheet.getCell(`A${row}`).font = boldFont
+  sheet.getCell(`A${row}`).alignment = { horizontal: 'center' }
   sheet.getCell(`A${row}`).border = borderThin
 
   sheet.mergeCells(`D${row}:E${row}`)
   sheet.getCell(`D${row}`).value = minutesToHoursString(totalHoras)
+  sheet.getCell(`D${row}`).alignment = { horizontal: 'center' }
   sheet.getCell(`D${row}`).border = borderThin
   sheet.getCell(`D${row}`).font = normalFont
 
   sheet.getCell(`F${row}`).value = 'Tot. Horas Extras'
   sheet.getCell(`F${row}`).font = boldFont
+  sheet.getCell(`F${row}`).alignment = { horizontal: 'center' }
   sheet.getCell(`F${row}`).border = borderThin
 
   sheet.mergeCells(`G${row}:H${row}`)
   sheet.getCell(`G${row}`).value = minutesToHoursString(totalExtras)
+  sheet.getCell(`G${row}`).alignment = { horizontal: 'center' }
   sheet.getCell(`G${row}`).border = borderThin
   sheet.getCell(`G${row}`).font = normalFont
   row++
@@ -390,18 +392,22 @@ export async function exportFolhaPresenca(
   sheet.mergeCells(`A${row}:C${row}`)
   sheet.getCell(`A${row}`).value = 'Intrajornada'
   sheet.getCell(`A${row}`).font = boldFont
+  sheet.getCell(`A${row}`).alignment = { horizontal: 'center' }
   sheet.getCell(`A${row}`).border = borderThin
 
   sheet.mergeCells(`D${row}:E${row}`)
   sheet.getCell(`D${row}`).value = ''
+  sheet.getCell(`D${row}`).alignment = { horizontal: 'center' }
   sheet.getCell(`D${row}`).border = borderThin
 
   sheet.getCell(`F${row}`).value = 'Gratificacao'
   sheet.getCell(`F${row}`).font = boldFont
+  sheet.getCell(`F${row}`).alignment = { horizontal: 'center' }
   sheet.getCell(`F${row}`).border = borderThin
 
   sheet.mergeCells(`G${row}:H${row}`)
   sheet.getCell(`G${row}`).value = ''
+  sheet.getCell(`G${row}`).alignment = { horizontal: 'center' }
   sheet.getCell(`G${row}`).border = borderThin
   row++
 
@@ -409,18 +415,22 @@ export async function exportFolhaPresenca(
   sheet.mergeCells(`A${row}:C${row}`)
   sheet.getCell(`A${row}`).value = 'Adicional Noturno'
   sheet.getCell(`A${row}`).font = boldFont
+  sheet.getCell(`A${row}`).alignment = { horizontal: 'center' }
   sheet.getCell(`A${row}`).border = borderThin
 
   sheet.mergeCells(`D${row}:E${row}`)
   sheet.getCell(`D${row}`).value = ''
+  sheet.getCell(`D${row}`).alignment = { horizontal: 'center' }
   sheet.getCell(`D${row}`).border = borderThin
 
   sheet.getCell(`F${row}`).value = 'Assiduidade'
   sheet.getCell(`F${row}`).font = boldFont
+  sheet.getCell(`F${row}`).alignment = { horizontal: 'center' }
   sheet.getCell(`F${row}`).border = borderThin
 
   sheet.mergeCells(`G${row}:H${row}`)
   sheet.getCell(`G${row}`).value = ''
+  sheet.getCell(`G${row}`).alignment = { horizontal: 'center' }
   sheet.getCell(`G${row}`).border = borderThin
   row++
 
@@ -428,18 +438,22 @@ export async function exportFolhaPresenca(
   sheet.mergeCells(`A${row}:C${row}`)
   sheet.getCell(`A${row}`).value = 'Horas Noturnas Reduzidas'
   sheet.getCell(`A${row}`).font = boldFont
+  sheet.getCell(`A${row}`).alignment = { horizontal: 'center' }
   sheet.getCell(`A${row}`).border = borderThin
 
   sheet.mergeCells(`D${row}:E${row}`)
   sheet.getCell(`D${row}`).value = ''
+  sheet.getCell(`D${row}`).alignment = { horizontal: 'center' }
   sheet.getCell(`D${row}`).border = borderThin
 
   sheet.getCell(`F${row}`).value = 'Vale Alimentacao'
   sheet.getCell(`F${row}`).font = boldFont
+  sheet.getCell(`F${row}`).alignment = { horizontal: 'center' }
   sheet.getCell(`F${row}`).border = borderThin
 
   sheet.mergeCells(`G${row}:H${row}`)
   sheet.getCell(`G${row}`).value = ''
+  sheet.getCell(`G${row}`).alignment = { horizontal: 'center' }
   sheet.getCell(`G${row}`).border = borderThin
   row++
 

@@ -6,16 +6,16 @@ const prisma = new PrismaClient()
 async function main() {
   console.log('Iniciando seed...')
 
-  // Criar empresa Ling
+  // Criar empresa Miliontech
   const empresa = await prisma.empresa.upsert({
     where: { cnpj: '12.345.678/0001-90' },
     update: {},
     create: {
-      nome: 'Ling Comunicação',
+      nome: 'Miliontech',
       cnpj: '12.345.678/0001-90',
       endereco: 'Rua Exemplo, 123 - Centro - São Paulo/SP',
-      atividade: 'Comunicação e Marketing',
-      servico: 'Agência de Publicidade',
+      atividade: 'Tecnologia da Informação',
+      servico: 'Desenvolvimento de Software',
     },
   })
 
@@ -25,11 +25,11 @@ async function main() {
   const senhaHash = await bcrypt.hash('admin123', 10)
 
   const admin = await prisma.usuario.upsert({
-    where: { email: 'admin@ling.com.br' },
+    where: { email: 'admin@miliontech.com.br' },
     update: {},
     create: {
       empresaId: empresa.id,
-      email: 'admin@ling.com.br',
+      email: 'admin@miliontech.com.br',
       senhaHash,
       nome: 'Administrador',
       codigoFuncionario: '001',
@@ -50,18 +50,18 @@ async function main() {
   const funcionarioSenha = await bcrypt.hash('func123', 10)
 
   const funcionario = await prisma.usuario.upsert({
-    where: { email: 'funcionario@ling.com.br' },
+    where: { email: 'funcionario@miliontech.com.br' },
     update: {},
     create: {
       empresaId: empresa.id,
-      email: 'funcionario@ling.com.br',
+      email: 'funcionario@miliontech.com.br',
       senhaHash: funcionarioSenha,
       nome: 'João Silva',
       codigoFuncionario: '002',
-      cargo: 'Analista',
-      codigoCargo: 'ANA',
-      departamento: 'Marketing',
-      codigoDepartamento: 'MKT',
+      cargo: 'Desenvolvedor',
+      codigoCargo: 'DEV',
+      departamento: 'Tecnologia',
+      codigoDepartamento: 'TI',
       ctps: '654321',
       ctpsSerie: '002',
       pis: '987.65432.10-1',
