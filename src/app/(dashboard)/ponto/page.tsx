@@ -3,7 +3,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
-import { ClockIcon, CheckIcon, SuccessIcon, ErrorIcon } from '@/components/icons'
+import { ClockIcon, CheckIcon, SuccessIcon, ErrorIcon, EditIcon } from '@/components/icons'
+import { PunchEditor } from '@/components/ponto/punch-editor'
 import { useCurrentTime } from '@/hooks'
 import { pontoService } from '@/services/api'
 import { formatTime, getDayOfWeek, getPunchTypeLabel } from '@/lib/utils'
@@ -14,6 +15,7 @@ export default function PontoPage() {
   const [todayPunch, setTodayPunch] = useState<TodayPunch | null>(null)
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+  const [isEditOpen, setIsEditOpen] = useState(false)
 
   const fetchTodayPunch = useCallback(async () => {
     try {
@@ -132,8 +134,16 @@ export default function PontoPage() {
 
       {/* Today's Record */}
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle icon={<ClockIcon className="w-6 h-6 text-blue-600" />}>Registro de Hoje</CardTitle>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsEditOpen(true)}
+            icon={<EditIcon />}
+          >
+            Editar
+          </Button>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 gap-4">
@@ -175,6 +185,14 @@ export default function PontoPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Editor Modal */}
+      <PunchEditor
+        isOpen={isEditOpen}
+        onClose={() => setIsEditOpen(false)}
+        currentPunch={todayPunch}
+        onSave={fetchTodayPunch}
+      />
     </div>
   )
 }

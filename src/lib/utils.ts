@@ -84,3 +84,46 @@ export function generateDateRange(startDate: Date, endDate: Date): Date[] {
 
   return dates
 }
+
+// Formata string de tempo ISO para exibição HH:MM
+export function formatTimeFromString(timeStr: string | null): string {
+  if (!timeStr) return ''
+  try {
+    const date = new Date(timeStr)
+    return date.toLocaleTimeString('pt-BR', {
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+  } catch {
+    return ''
+  }
+}
+
+// Formata string de tempo ISO para input type="time" (HH:MM)
+export function formatTimeForInput(timeStr: string | null): string {
+  if (!timeStr) return ''
+  try {
+    const date = new Date(timeStr)
+    const hours = date.getHours().toString().padStart(2, '0')
+    const minutes = date.getMinutes().toString().padStart(2, '0')
+    return `${hours}:${minutes}`
+  } catch {
+    return ''
+  }
+}
+
+// Cria um Map de registros indexados por data para lookup O(1)
+export function createRegistroMap<T extends { data: string }>(registros: T[]): Map<string, T> {
+  const map = new Map<string, T>()
+  registros.forEach(r => {
+    const dateStr = r.data.split('T')[0]
+    map.set(dateStr, r)
+  })
+  return map
+}
+
+// Busca registro por data no Map
+export function getRegistroByDate<T>(map: Map<string, T>, date: Date): T | undefined {
+  const dateStr = date.toISOString().split('T')[0]
+  return map.get(dateStr)
+}

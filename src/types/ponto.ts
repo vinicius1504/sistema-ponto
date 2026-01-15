@@ -32,3 +32,10 @@ export interface RelatorioResponse {
   registros: Registro[]
   usuario: import('./user').Usuario
 }
+
+export interface EditPontoData {
+  entrada?: string | null
+  saidaAlmoco?: string | null
+  voltaAlmoco?: string | null
+  saida?: string | null
+}

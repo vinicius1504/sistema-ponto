@@ -5,11 +5,13 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { FolhaPonto } from '@/components/relatorio/folha-ponto'
-import { ReportIcon, DownloadIcon, SearchIcon, ExcelIcon } from '@/components/icons'
+import { FolhaPontoPDF } from '@/components/relatorio/folha-ponto-pdf'
+import { FolhaPontoEditor } from '@/components/relatorio/folha-ponto-editor'
+import { Modal } from '@/components/ui/modal'
+import { ReportIcon, DownloadIcon, SearchIcon, EditIcon } from '@/components/icons'
 import { exportFolhaPresenca, getPeriodo20a20 } from '@/lib/export-folha-presenca'
 import { authService, pontoService, funcionariosService } from '@/services/api'
-import html2canvas from 'html2canvas'
-import jsPDF from 'jspdf'
+import { pdf } from '@react-pdf/renderer'
 import type { Registro, Usuario, Funcionario } from '@/types'
 
 export default function RelatoriosPage() {
@@ -21,6 +23,7 @@ export default function RelatoriosPage() {
   const [usuario, setUsuario] = useState<Usuario | null>(null)
   const [funcionarios, setFuncionarios] = useState<Funcionario[]>([])
   const [isAdmin, setIsAdmin] = useState(false)
+  const [isEditMode, setIsEditMode] = useState(false)
 
   const periodo20a20 = getPeriodo20a20()
   const [filters, setFilters] = useState({
@@ -73,71 +76,30 @@ export default function RelatoriosPage() {
   }
 
   const handleExportPDF = async () => {
-    if (!folhaRef.current || !usuario) return
+    if (!usuario) return
 
     setExporting(true)
 
     try {
-      // Captura o elemento exatamente como está no preview
-      const canvas = await html2canvas(folhaRef.current, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#ffffff',
-        allowTaint: true,
-        onclone: (clonedDoc) => {
-          // Força estilos inline no clone para garantir renderização correta
-          const cells = clonedDoc.querySelectorAll('td, th')
-          cells.forEach((cell) => {
-            const el = cell as HTMLElement
-            el.style.display = 'table-cell'
-            el.style.verticalAlign = 'middle'
-            el.style.textAlign = 'center'
-          })
-        }
-      })
+      // Gerar PDF usando @react-pdf/renderer
+      const blob = await pdf(
+        <FolhaPontoPDF
+          usuario={usuario}
+          registros={registros}
+          dataInicio={new Date(filters.dataInicio)}
+          dataFim={new Date(filters.dataFim)}
+        />
+      ).toBlob()
 
-      const imgData = canvas.toDataURL('image/png', 1.0)
-
-      // Dimensoes A4 em mm
-      const pdfWidth = 210
-      const pdfHeight = 297
-
-      // Criar PDF com tamanho A4
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4'
-      })
-
-      // Calcular proporcoes para manter aspecto e preencher a pagina
-      const imgWidth = canvas.width
-      const imgHeight = canvas.height
-      const imgAspect = imgWidth / imgHeight
-      const pageAspect = pdfWidth / pdfHeight
-
-      let finalWidth: number
-      let finalHeight: number
-      let offsetX = 0
-      let offsetY = 0
-
-      if (imgAspect > pageAspect) {
-        // Imagem mais larga - ajustar pela largura
-        finalWidth = pdfWidth
-        finalHeight = pdfWidth / imgAspect
-        offsetY = (pdfHeight - finalHeight) / 2
-      } else {
-        // Imagem mais alta - ajustar pela altura
-        finalHeight = pdfHeight
-        finalWidth = pdfHeight * imgAspect
-        offsetX = (pdfWidth - finalWidth) / 2
-      }
-
-      // Adicionar imagem centralizada na pagina
-      pdf.addImage(imgData, 'PNG', offsetX, offsetY, finalWidth, finalHeight)
-
-      const fileName = `folha-ponto-${usuario.nome.replace(/\s/g, '-')}-${filters.dataInicio}-${filters.dataFim}.pdf`
-      pdf.save(fileName)
+      // Criar link para download
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `folha-ponto-${usuario.nome.replace(/\s/g, '-')}-${filters.dataInicio}-${filters.dataFim}.pdf`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
     } catch (error) {
       console.error('Erro ao exportar PDF:', error)
     } finally {
@@ -238,17 +200,24 @@ export default function RelatoriosPage() {
         </CardContent>
       </Card>
 
-      {/* Botao de Exportar */}
-      {usuario && registros.length > 0 && (
+      {/* Botoes de Acao */}
+      {usuario && (
         <div className="flex justify-end gap-3">
+          <Button
+            onClick={() => setIsEditMode(true)}
+            variant="secondary"
+            icon={<EditIcon />}
+          >
+            Editar Horarios
+          </Button>
           <Button
             onClick={handleExportPDF}
             disabled={exporting}
             loading={exporting}
-            variant="secondary"
+            variant="primary"
             icon={<DownloadIcon />}
           >
-            {exporting ? 'Exportando...' : 'Exportar Relatorio'}
+            {exporting ? 'Exportando...' : 'Exportar PDF'}
           </Button>
         </div>
       )}
@@ -259,8 +228,8 @@ export default function RelatoriosPage() {
           <CardHeader>
             <CardTitle>Preview da Folha de Ponto</CardTitle>
           </CardHeader>
-          <CardContent className="overflow-auto">
-            <div className="border border-slate-300 inline-block bg-white">
+          <CardContent>
+            <div className="border border-slate-300 bg-white overflow-auto">
               <FolhaPonto
                 ref={folhaRef}
                 usuario={usuario}
@@ -272,6 +241,26 @@ export default function RelatoriosPage() {
           </CardContent>
         </Card>
       )}
+
+      {/* Modal do Editor */}
+      <Modal
+        isOpen={isEditMode}
+        onClose={() => setIsEditMode(false)}
+        className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
+      >
+        <FolhaPontoEditor
+          usuario={usuario!}
+          registros={registros}
+          dataInicio={new Date(filters.dataInicio)}
+          dataFim={new Date(filters.dataFim)}
+          usuarioId={filters.usuarioId || undefined}
+          onSave={() => {
+            setIsEditMode(false)
+            handleSearch()
+          }}
+          onCancel={() => setIsEditMode(false)}
+        />
+      </Modal>
 
       {!usuario && !loading && (
         <Card>

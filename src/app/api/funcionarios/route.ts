@@ -29,7 +29,12 @@ export async function GET() {
         ctpsSerie: true,
         pis: true,
         isAdmin: true,
-        createdAt: true
+        createdAt: true,
+        empresaNomeCustom: true,
+        empresaCnpjCustom: true,
+        empresaEnderecoCustom: true,
+        empresaAtividadeCustom: true,
+        empresaServicoCustom: true
       },
       orderBy: { nome: 'asc' }
     })

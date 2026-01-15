@@ -28,6 +28,7 @@ export default function DashboardLayout({
     { href: '/dashboard', label: 'Dashboard', icon: DashboardIcon },
     { href: '/ponto', label: 'Bater Ponto', icon: ClockIcon },
     { href: '/relatorios', label: 'Relatorios', icon: ReportIcon },
+    { href: '/perfil', label: 'Meu Perfil', icon: UserIcon },
     ...(user?.isAdmin ? [{ href: '/funcionarios', label: 'Funcionarios', icon: UsersIcon }] : [])
   ]
 
@@ -53,11 +54,15 @@ export default function DashboardLayout({
 
         {/* User Info */}
         {user && (
-          <div className={`p-4 border-b border-slate-700 ${!sidebarOpen && 'flex justify-center'}`}>
+          <Link
+            href="/perfil"
+            className={`block p-4 border-b border-slate-700 hover:bg-slate-700/50 transition-colors ${!sidebarOpen && 'flex justify-center'}`}
+            title="Ver meu perfil"
+          >
             {sidebarOpen ? (
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-slate-600 rounded-full flex items-center justify-center text-slate-300">
-                  <UserIcon />
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold shadow-lg">
+                  {user.nome.split(' ').map(n => n[0]).slice(0, 2).join('')}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-white font-medium truncate">{user.nome}</p>
@@ -65,11 +70,11 @@ export default function DashboardLayout({
                 </div>
               </div>
             ) : (
-              <div className="w-10 h-10 bg-slate-600 rounded-full flex items-center justify-center text-slate-300">
-                <UserIcon />
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-lg">
+                {user.nome.split(' ').map(n => n[0]).slice(0, 2).join('')}
               </div>
             )}
-          </div>
+          </Link>
         )}
 
         {/* Navigation */}

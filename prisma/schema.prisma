@@ -40,6 +40,13 @@ model Usuario {
   createdAt          DateTime @default(now()) @map("created_at")
   updatedAt          DateTime @updatedAt @map("updated_at")
 
+  // Campos customizaveis de empresa por usuario (sobrescrevem os dados da empresa)
+  empresaNomeCustom      String? @map("empresa_nome_custom")
+  empresaCnpjCustom      String? @map("empresa_cnpj_custom")
+  empresaEnderecoCustom  String? @map("empresa_endereco_custom")
+  empresaAtividadeCustom String? @map("empresa_atividade_custom")
+  empresaServicoCustom   String? @map("empresa_servico_custom")
+
   empresa  Empresa         @relation(fields: [empresaId], references: [id])
   registros RegistroPonto[]
 

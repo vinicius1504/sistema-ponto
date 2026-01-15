@@ -2,11 +2,14 @@ import type {
   User,
   Usuario,
   Funcionario,
+  FuncionarioCompleto,
   TodayPunch,
   Registro,
   RegisterData,
   CreateFuncionarioData,
-  RelatorioParams
+  UpdateFuncionarioData,
+  RelatorioParams,
+  EditPontoData
 } from '@/types'
 
 class ApiError extends Error {
@@ -80,13 +83,31 @@ export const pontoService = {
 
     const response = await fetch(`/api/ponto/relatorio?${searchParams}`)
     return handleResponse(response)
+  },
+
+  async editarPonto(data: string, updates: EditPontoData, usuarioId?: string): Promise<{ mensagem: string; registro: TodayPunch }> {
+    const params = new URLSearchParams({ data })
+    if (usuarioId) {
+      params.append('usuarioId', usuarioId)
+    }
+    const response = await fetch(`/api/ponto?${params}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updates)
+    })
+    return handleResponse(response)
   }
 }
 
 // Funcionarios Service
 export const funcionariosService = {
-  async getAll(): Promise<{ funcionarios: Funcionario[] }> {
+  async getAll(): Promise<{ funcionarios: FuncionarioCompleto[] }> {
     const response = await fetch('/api/funcionarios')
+    return handleResponse(response)
+  },
+
+  async getById(id: string): Promise<{ funcionario: FuncionarioCompleto }> {
+    const response = await fetch(`/api/funcionarios/${id}`)
     return handleResponse(response)
   },
 
@@ -95,6 +116,22 @@ export const funcionariosService = {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
+    })
+    return handleResponse(response)
+  },
+
+  async update(id: string, data: UpdateFuncionarioData): Promise<{ funcionario: FuncionarioCompleto }> {
+    const response = await fetch(`/api/funcionarios/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    })
+    return handleResponse(response)
+  },
+
+  async delete(id: string): Promise<{ success: boolean }> {
+    const response = await fetch(`/api/funcionarios/${id}`, {
+      method: 'DELETE'
     })
     return handleResponse(response)
   }

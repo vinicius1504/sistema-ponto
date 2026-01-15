@@ -20,6 +20,12 @@ interface Usuario {
   ctps: string
   ctpsSerie: string
   pis: string
+  // Campos customizaveis de empresa
+  empresaNomeCustom?: string | null
+  empresaCnpjCustom?: string | null
+  empresaEnderecoCustom?: string | null
+  empresaAtividadeCustom?: string | null
+  empresaServicoCustom?: string | null
   empresa: {
     nome: string
     cnpj: string
@@ -88,6 +94,13 @@ export async function exportFolhaPresenca(
   dataInicio: Date,
   dataFim: Date
 ): Promise<Blob> {
+  // Usa dados customizados do usuario ou fallback para dados da empresa
+  const empresaNome = usuario.empresaNomeCustom || usuario.empresa.nome
+  const empresaCnpj = usuario.empresaCnpjCustom || usuario.empresa.cnpj
+  const empresaEndereco = usuario.empresaEnderecoCustom || usuario.empresa.endereco
+  const empresaAtividade = usuario.empresaAtividadeCustom || usuario.empresa.atividade
+  const empresaServico = usuario.empresaServicoCustom || usuario.empresa.servico || empresaNome
+
   const workbook = new ExcelJS.Workbook()
   const sheet = workbook.addWorksheet('Folha de Presenca', {
     pageSetup: {
@@ -174,19 +187,19 @@ export async function exportFolhaPresenca(
   // === DADOS DA EMPRESA E FUNCIONARIO (sem bordas internas) ===
   // Linha: Empresa e CNPJ
   sheet.mergeCells(`A${row}:D${row}`)
-  sheet.getCell(`A${row}`).value = `EMPRESA: ${usuario.empresa.nome.toUpperCase()}`
+  sheet.getCell(`A${row}`).value = `EMPRESA: ${empresaNome.toUpperCase()}`
   sheet.getCell(`A${row}`).font = boldFont
   sheet.getCell(`A${row}`).border = { left: { style: 'thin' } }
 
   sheet.mergeCells(`E${row}:H${row}`)
-  sheet.getCell(`E${row}`).value = `CNPJ/CPF: ${usuario.empresa.cnpj.toUpperCase()}`
+  sheet.getCell(`E${row}`).value = `CNPJ/CPF: ${empresaCnpj.toUpperCase()}`
   sheet.getCell(`E${row}`).font = boldFont
   sheet.getCell(`H${row}`).border = { right: { style: 'thin' } }
   row++
 
   // Linha: Servico
   sheet.mergeCells(`A${row}:D${row}`)
-  sheet.getCell(`A${row}`).value = `SERVICO: ${(usuario.empresa.servico || usuario.empresa.nome).toUpperCase()}`
+  sheet.getCell(`A${row}`).value = `SERVICO: ${empresaServico.toUpperCase()}`
   sheet.getCell(`A${row}`).font = boldFont
   sheet.getCell(`A${row}`).border = { left: { style: 'thin' } }
 
@@ -197,7 +210,7 @@ export async function exportFolhaPresenca(
 
   // Linha: Atividade
   sheet.mergeCells(`A${row}:D${row}`)
-  sheet.getCell(`A${row}`).value = `ATIVIDADE: ${usuario.empresa.atividade.toUpperCase()}`
+  sheet.getCell(`A${row}`).value = `ATIVIDADE: ${empresaAtividade.toUpperCase()}`
   sheet.getCell(`A${row}`).font = boldFont
   sheet.getCell(`A${row}`).border = { left: { style: 'thin' } }
 
@@ -208,7 +221,7 @@ export async function exportFolhaPresenca(
 
   // Linha: Endereco e CTPS
   sheet.mergeCells(`A${row}:D${row}`)
-  sheet.getCell(`A${row}`).value = `ENDERECO: ${usuario.empresa.endereco.toUpperCase()}`
+  sheet.getCell(`A${row}`).value = `ENDERECO: ${empresaEndereco.toUpperCase()}`
   sheet.getCell(`A${row}`).font = boldFont
   sheet.getCell(`A${row}`).border = { left: { style: 'thin' } }
 

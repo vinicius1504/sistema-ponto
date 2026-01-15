@@ -59,6 +59,11 @@ export async function GET(request: NextRequest) {
         ctps: usuario?.ctps,
         ctpsSerie: usuario?.ctpsSerie,
         pis: usuario?.pis,
+        empresaNomeCustom: usuario?.empresaNomeCustom,
+        empresaCnpjCustom: usuario?.empresaCnpjCustom,
+        empresaEnderecoCustom: usuario?.empresaEnderecoCustom,
+        empresaAtividadeCustom: usuario?.empresaAtividadeCustom,
+        empresaServicoCustom: usuario?.empresaServicoCustom,
         empresa: usuario?.empresa
       }
     })

@@ -1,35 +1,15 @@
 'use client'
 
-import { forwardRef } from 'react'
-import { getDayOfWeek, minutesToHoursString } from '@/lib/utils'
-
-interface Registro {
-  data: string
-  entrada: string | null
-  saidaAlmoco: string | null
-  voltaAlmoco: string | null
-  saida: string | null
-  horasExtras: number
-}
-
-interface Usuario {
-  nome: string
-  codigoFuncionario: string
-  cargo: string
-  codigoCargo: string
-  departamento: string
-  codigoDepartamento: string
-  ctps: string
-  ctpsSerie: string
-  pis: string
-  empresa: {
-    nome: string
-    cnpj: string
-    endereco: string
-    atividade: string
-    servico: string | null
-  }
-}
+import { forwardRef, useMemo } from 'react'
+import {
+  getDayOfWeek,
+  minutesToHoursString,
+  formatTimeFromString,
+  generateDateRange,
+  createRegistroMap,
+  getRegistroByDate
+} from '@/lib/utils'
+import type { Registro, Usuario } from '@/types'
 
 interface FolhaPontoProps {
   usuario: Usuario
@@ -40,82 +20,28 @@ interface FolhaPontoProps {
 
 const FolhaPonto = forwardRef<HTMLDivElement, FolhaPontoProps>(
   ({ usuario, registros, dataInicio, dataFim }, ref) => {
-    const formatTimeFromString = (timeStr: string | null): string => {
-      if (!timeStr) return ''
-      try {
-        const date = new Date(timeStr)
-        return date.toLocaleTimeString('pt-BR', {
-          hour: '2-digit',
-          minute: '2-digit'
-        })
-      } catch {
-        return ''
-      }
-    }
+    // Memoize expensive calculations
+    const registroMap = useMemo(() => createRegistroMap(registros), [registros])
+    const days = useMemo(() => generateDateRange(dataInicio, dataFim), [dataInicio, dataFim])
 
-    const generateDays = () => {
-      const days = []
-      const current = new Date(dataInicio)
-      while (current <= dataFim) {
-        days.push(new Date(current))
-        current.setDate(current.getDate() + 1)
-      }
-      return days
-    }
-
-    const getRegistroForDate = (date: Date) => {
-      const dateStr = date.toISOString().split('T')[0]
-      return registros.find((r) => r.data.startsWith(dateStr))
-    }
-
-    const calculateTotalHours = () => {
-      let total = 0
-      registros.forEach((r) => {
-        if (r.entrada && r.saida) {
-          const entrada = new Date(r.entrada)
-          const saida = new Date(r.saida)
-          let minutes = (saida.getTime() - entrada.getTime()) / (1000 * 60)
-
-          if (r.saidaAlmoco && r.voltaAlmoco) {
-            const saidaAlmoco = new Date(r.saidaAlmoco)
-            const voltaAlmoco = new Date(r.voltaAlmoco)
-            const intervalo = (voltaAlmoco.getTime() - saidaAlmoco.getTime()) / (1000 * 60)
-            minutes -= intervalo
-          }
-
-          total += minutes
-        }
-      })
-      return total
-    }
-
-    const calculateTotalExtras = () => {
-      return registros.reduce((acc, r) => acc + (r.horasExtras || 0), 0)
-    }
-
-    const days = generateDays()
-    const totalHoras = calculateTotalHours()
-    const totalExtras = calculateTotalExtras()
+    // Usa dados customizados do usuario ou fallback para dados da empresa
+    const empresaNome = usuario.empresaNomeCustom || usuario.empresa.nome
+    const empresaCnpj = usuario.empresaCnpjCustom || usuario.empresa.cnpj
+    const empresaEndereco = usuario.empresaEnderecoCustom || usuario.empresa.endereco
+    const empresaAtividade = usuario.empresaAtividadeCustom || usuario.empresa.atividade
+    const empresaServico = usuario.empresaServicoCustom || usuario.empresa.servico || empresaNome
 
     const formatPeriodo = () => {
       return `${dataInicio.toLocaleDateString('pt-BR')} a ${dataFim.toLocaleDateString('pt-BR')}`
     }
 
-    // Estilo das células com display flex para centralização perfeita
+    // Estilo das células - usando line-height para centralização vertical (mais compatível com html2canvas)
     const cellStyle: React.CSSProperties = {
       height: '20px',
+      lineHeight: '20px',
       padding: 0,
-      verticalAlign: 'middle',
-      textAlign: 'center'
-    }
-
-    // Estilo para o conteúdo interno das células (centralização com flexbox)
-    const cellContentStyle: React.CSSProperties = {
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      height: '100%',
-      width: '100%'
+      textAlign: 'center',
+      verticalAlign: 'middle'
     }
 
     return (
@@ -138,19 +64,19 @@ const FolhaPonto = forwardRef<HTMLDivElement, FolhaPontoProps>(
             <div className="p-2 space-y-1 font-bold uppercase">
               <div>
                 <span>Empresa: </span>
-                {usuario.empresa.nome}
+                {empresaNome}
               </div>
               <div>
                 <span>Servico: </span>
-                {usuario.empresa.servico || usuario.empresa.nome}
+                {empresaServico}
               </div>
               <div>
                 <span>Atividade: </span>
-                {usuario.empresa.atividade}
+                {empresaAtividade}
               </div>
               <div>
                 <span>Endereco: </span>
-                {usuario.empresa.endereco}
+                {empresaEndereco}
               </div>
               <div>
                 <span>Funcionario: </span>
@@ -166,7 +92,7 @@ const FolhaPonto = forwardRef<HTMLDivElement, FolhaPontoProps>(
             <div className="p-2 space-y-1 font-bold uppercase">
               <div>
                 <span>CNPJ/CPF: </span>
-                {usuario.empresa.cnpj}
+                {empresaCnpj}
               </div>
               <div>&nbsp;</div>
               <div>&nbsp;</div>
@@ -244,49 +170,35 @@ const FolhaPonto = forwardRef<HTMLDivElement, FolhaPontoProps>(
           </thead>
           <tbody>
             {days.map((day) => {
-              const registro = getRegistroForDate(day)
+              const registro = getRegistroByDate(registroMap, day)
 
               return (
                 <tr key={day.toISOString()}>
                   <td className="border border-black" style={cellStyle}>
-                    <div style={cellContentStyle}>
-                      {day.getDate().toString().padStart(2, '0')}
-                    </div>
+                    {day.getDate().toString().padStart(2, '0')}
                   </td>
                   <td className="border border-black" style={cellStyle}>
-                    <div style={cellContentStyle}>
-                      {getDayOfWeek(day)}
-                    </div>
+                    {getDayOfWeek(day)}
                   </td>
                   <td className="border border-black" style={cellStyle}>
-                    <div style={cellContentStyle}>
-                      {formatTimeFromString(registro?.entrada || null)}
-                    </div>
+                    {formatTimeFromString(registro?.entrada || null)}
                   </td>
                   <td className="border border-black" style={cellStyle}>
-                    <div style={cellContentStyle}>
-                      {formatTimeFromString(registro?.saidaAlmoco || null)}
-                    </div>
+                    {formatTimeFromString(registro?.saidaAlmoco || null)}
                   </td>
                   <td className="border border-black" style={cellStyle}>
-                    <div style={cellContentStyle}>
-                      {formatTimeFromString(registro?.voltaAlmoco || null)}
-                    </div>
+                    {formatTimeFromString(registro?.voltaAlmoco || null)}
                   </td>
                   <td className="border border-black" style={cellStyle}>
-                    <div style={cellContentStyle}>
-                      {formatTimeFromString(registro?.saida || null)}
-                    </div>
+                    {formatTimeFromString(registro?.saida || null)}
                   </td>
                   <td className="border border-black" style={cellStyle}>
-                    <div style={cellContentStyle}>
-                      {registro?.horasExtras
-                        ? minutesToHoursString(registro.horasExtras)
-                        : ''}
-                    </div>
+                    {registro?.horasExtras
+                      ? minutesToHoursString(registro.horasExtras)
+                      : ''}
                   </td>
                   <td className="border border-black" style={cellStyle}>
-                    <div style={cellContentStyle}>&nbsp;</div>
+                    &nbsp;
                   </td>
                 </tr>
               )

@@ -23,6 +23,12 @@ export interface Usuario {
   ctps: string
   ctpsSerie: string
   pis: string
+  // Campos customizaveis de empresa (sobrescrevem os dados da empresa)
+  empresaNomeCustom?: string | null
+  empresaCnpjCustom?: string | null
+  empresaEnderecoCustom?: string | null
+  empresaAtividadeCustom?: string | null
+  empresaServicoCustom?: string | null
   empresa: {
     nome: string
     cnpj: string
@@ -55,4 +61,55 @@ export interface CreateFuncionarioData {
   email: string
   senha: string
   cargo: string
+}
+
+export interface UpdateFuncionarioData {
+  nome?: string
+  email?: string
+  senha?: string
+  codigoFuncionario?: string
+  cargo?: string
+  codigoCargo?: string
+  departamento?: string
+  codigoDepartamento?: string
+  ctps?: string
+  ctpsSerie?: string
+  pis?: string
+  isAdmin?: boolean
+  // Campos customizaveis de empresa
+  empresaNomeCustom?: string | null
+  empresaCnpjCustom?: string | null
+  empresaEnderecoCustom?: string | null
+  empresaAtividadeCustom?: string | null
+  empresaServicoCustom?: string | null
+}
+
+export interface FuncionarioCompleto {
+  id: string
+  nome: string
+  email: string
+  codigoFuncionario: string
+  cargo: string
+  codigoCargo: string
+  departamento: string
+  codigoDepartamento: string
+  ctps: string
+  ctpsSerie: string
+  pis: string
+  isAdmin: boolean
+  createdAt: string
+  // Campos customizaveis de empresa
+  empresaNomeCustom: string | null
+  empresaCnpjCustom: string | null
+  empresaEnderecoCustom: string | null
+  empresaAtividadeCustom: string | null
+  empresaServicoCustom: string | null
+  empresa?: {
+    id: string
+    nome: string
+    cnpj: string
+    endereco: string
+    atividade: string
+    servico: string | null
+  }
 }
