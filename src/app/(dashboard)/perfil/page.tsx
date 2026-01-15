@@ -411,29 +411,39 @@ export default function PerfilPage() {
           {usuario.empresa && (
             <Card className="lg:col-span-2">
               <CardHeader>
-                <CardTitle icon={<BuildingIcon />}>Empresa</CardTitle>
+                <CardTitle icon={<BuildingIcon />}>Empresa (Dados para Folha de Ponto)</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="flex justify-between py-2 border-b border-slate-100">
                     <span className="text-slate-500">Nome</span>
-                    <span className="font-medium text-slate-800">{usuario.empresa.nome}</span>
+                    <span className="font-medium text-slate-800">
+                      {usuario.empresaNomeCustom || usuario.empresa.nome || 'Não informado'}
+                    </span>
                   </div>
                   <div className="flex justify-between py-2 border-b border-slate-100">
                     <span className="text-slate-500">CNPJ</span>
-                    <span className="font-medium text-slate-800">{usuario.empresa.cnpj}</span>
+                    <span className="font-medium text-slate-800">
+                      {usuario.empresaCnpjCustom || usuario.empresa.cnpj || 'Não informado'}
+                    </span>
                   </div>
                   <div className="flex justify-between py-2 border-b border-slate-100">
                     <span className="text-slate-500">Atividade</span>
-                    <span className="font-medium text-slate-800">{usuario.empresa.atividade}</span>
+                    <span className="font-medium text-slate-800">
+                      {usuario.empresaAtividadeCustom || usuario.empresa.atividade || 'Não informado'}
+                    </span>
                   </div>
                   <div className="flex justify-between py-2 border-b border-slate-100">
                     <span className="text-slate-500">Servico</span>
-                    <span className="font-medium text-slate-800">{usuario.empresa.servico || '-'}</span>
+                    <span className="font-medium text-slate-800">
+                      {usuario.empresaServicoCustom || usuario.empresa.servico || 'Não informado'}
+                    </span>
                   </div>
                   <div className="md:col-span-2 flex justify-between py-2">
                     <span className="text-slate-500">Endereco</span>
-                    <span className="font-medium text-slate-800">{usuario.empresa.endereco}</span>
+                    <span className="font-medium text-slate-800">
+                      {usuario.empresaEnderecoCustom || usuario.empresa.endereco || 'Não informado'}
+                    </span>
                   </div>
                 </div>
               </CardContent>

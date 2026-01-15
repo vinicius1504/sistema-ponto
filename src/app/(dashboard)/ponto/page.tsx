@@ -60,7 +60,12 @@ export default function PontoPage() {
 
   const formatPunchTime = (time: string | null) => {
     if (!time) return '--:--'
-    return new Date(time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+    // Extrair apenas HH:MM da string ISO sem conversão de fuso horário
+    const match = time.match(/T(\d{2}:\d{2})/)
+    if (match) return match[1]
+    // Fallback para strings que já são apenas hora
+    if (/^\d{2}:\d{2}/.test(time)) return time.slice(0, 5)
+    return '--:--'
   }
 
   const getPunchCardStyle = (hasValue: boolean, isNext: boolean, color: string) => {
