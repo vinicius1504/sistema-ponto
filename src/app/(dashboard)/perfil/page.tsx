@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
-import { UserIcon, EditIcon, ErrorIcon, SuccessIcon, BuildingIcon, IdCardIcon, BriefcaseIcon } from '@/components/icons'
+import { UserIcon, EditIcon, ErrorIcon, SuccessIcon, BuildingIcon, IdCardIcon, BriefcaseIcon, EyeIcon, EyeOffIcon } from '@/components/icons'
 import { authService, funcionariosService } from '@/services/api'
 import type { FuncionarioCompleto, UpdateFuncionarioData } from '@/types'
 
@@ -16,6 +16,7 @@ export default function PerfilPage() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [formData, setFormData] = useState<UpdateFuncionarioData>({})
+  const [showSenha, setShowSenha] = useState(false)
 
   const fetchUsuario = useCallback(async () => {
     try {
@@ -196,13 +197,23 @@ export default function PerfilPage() {
                     onChange={(e) => updateField('email', e.target.value)}
                     required
                   />
-                  <Input
-                    id="senha"
-                    label="Nova Senha (deixe em branco para manter)"
-                    type="password"
-                    value={formData.senha || ''}
-                    onChange={(e) => updateField('senha', e.target.value)}
-                  />
+                  <div className="relative">
+                    <Input
+                      id="senha"
+                      label="Nova Senha (deixe em branco para manter)"
+                      type={showSenha ? 'text' : 'password'}
+                      value={formData.senha || ''}
+                      onChange={(e) => updateField('senha', e.target.value)}
+                    />
+                    <button
+                      type="button"
+                      className="absolute right-3 top-[38px] text-gray-500 hover:text-gray-700"
+                      onClick={() => setShowSenha(!showSenha)}
+                      tabIndex={-1}
+                    >
+                      {showSenha ? <EyeOffIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}
+                    </button>
+                  </div>
                 </div>
               </div>
 

@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
-import { ErrorIcon } from '@/components/icons'
+import { ErrorIcon, EyeIcon, EyeOffIcon } from '@/components/icons'
 import { authService } from '@/services/api'
 
 const initialFormData = {
@@ -31,28 +31,103 @@ const initialFormData = {
   pis: ''
 }
 
+type FormErrors = Partial<Record<keyof typeof initialFormData, string>>
+
+// Validadores
+const validateEmail = (email: string): string | null => {
+  if (!email) return 'Email e obrigatorio'
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (!emailRegex.test(email)) return 'Email invalido'
+  return null
+}
+
+const validateSenha = (senha: string): string | null => {
+  if (!senha) return 'Senha e obrigatoria'
+  if (senha.length < 6) return 'Senha deve ter pelo menos 6 caracteres'
+  return null
+}
+
+const validateCNPJ = (cnpj: string): string | null => {
+  if (!cnpj) return 'CNPJ/CPF e obrigatorio'
+  const cleanCnpj = cnpj.replace(/\D/g, '')
+  if (cleanCnpj.length !== 11 && cleanCnpj.length !== 14) {
+    return 'CNPJ deve ter 14 digitos ou CPF 11 digitos'
+  }
+  return null
+}
+
+const validateRequired = (value: string, fieldName: string): string | null => {
+  if (!value || !value.trim()) return `${fieldName} e obrigatorio`
+  return null
+}
+
 export default function RegistroPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [step, setStep] = useState(1)
   const [formData, setFormData] = useState(initialFormData)
+  const [fieldErrors, setFieldErrors] = useState<FormErrors>({})
+  const [showSenha, setShowSenha] = useState(false)
+  const [showConfirmarSenha, setShowConfirmarSenha] = useState(false)
+
+  const validateStep1 = (): boolean => {
+    const errors: FormErrors = {}
+
+    const nomeError = validateRequired(formData.empresaNome, 'Nome da empresa')
+    if (nomeError) errors.empresaNome = nomeError
+
+    const cnpjError = validateCNPJ(formData.empresaCnpj)
+    if (cnpjError) errors.empresaCnpj = cnpjError
+
+    const enderecoError = validateRequired(formData.empresaEndereco, 'Endereco')
+    if (enderecoError) errors.empresaEndereco = enderecoError
+
+    const atividadeError = validateRequired(formData.empresaAtividade, 'Atividade')
+    if (atividadeError) errors.empresaAtividade = atividadeError
+
+    setFieldErrors(errors)
+    return Object.keys(errors).length === 0
+  }
+
+  const validateStep2 = (): boolean => {
+    const errors: FormErrors = {}
+
+    const emailError = validateEmail(formData.email)
+    if (emailError) errors.email = emailError
+
+    const nomeError = validateRequired(formData.nome, 'Nome')
+    if (nomeError) errors.nome = nomeError
+
+    const senhaError = validateSenha(formData.senha)
+    if (senhaError) errors.senha = senhaError
+
+    if (!formData.confirmarSenha) {
+      errors.confirmarSenha = 'Confirmacao de senha e obrigatoria'
+    } else if (formData.senha !== formData.confirmarSenha) {
+      errors.confirmarSenha = 'As senhas nao coincidem'
+    }
+
+    setFieldErrors(errors)
+    return Object.keys(errors).length === 0
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setError('')
 
     if (step === 1) {
-      setStep(2)
+      if (validateStep1()) {
+        setStep(2)
+      }
       return
     }
 
-    if (formData.senha !== formData.confirmarSenha) {
-      setError('As senhas nao coincidem')
+    if (!validateStep2()) {
       return
     }
 
     setLoading(true)
-    setError('')
 
     try {
       await authService.register({
@@ -77,6 +152,10 @@ export default function RegistroPage() {
 
   const updateField = (field: string, value: string) => {
     setFormData({ ...formData, [field]: value })
+    // Limpar erro do campo quando o usuario comecar a digitar
+    if (fieldErrors[field as keyof FormErrors]) {
+      setFieldErrors({ ...fieldErrors, [field]: undefined })
+    }
   }
 
   return (
@@ -102,9 +181,17 @@ export default function RegistroPage() {
             )}
 
             {step === 1 ? (
-              <EmpresaForm formData={formData} updateField={updateField} />
+              <EmpresaForm formData={formData} updateField={updateField} errors={fieldErrors} />
             ) : (
-              <FuncionarioForm formData={formData} updateField={updateField} />
+              <FuncionarioForm
+                formData={formData}
+                updateField={updateField}
+                errors={fieldErrors}
+                showSenha={showSenha}
+                setShowSenha={setShowSenha}
+                showConfirmarSenha={showConfirmarSenha}
+                setShowConfirmarSenha={setShowConfirmarSenha}
+              />
             )}
 
             <div className="flex gap-4">
@@ -145,9 +232,17 @@ function StepIndicator({ active }: { active: boolean }) {
 interface FormSectionProps {
   formData: typeof initialFormData
   updateField: (field: string, value: string) => void
+  errors: FormErrors
 }
 
-function EmpresaForm({ formData, updateField }: FormSectionProps) {
+interface FuncionarioFormProps extends FormSectionProps {
+  showSenha: boolean
+  setShowSenha: (show: boolean) => void
+  showConfirmarSenha: boolean
+  setShowConfirmarSenha: (show: boolean) => void
+}
+
+function EmpresaForm({ formData, updateField, errors }: FormSectionProps) {
   return (
     <>
       <Input
@@ -156,6 +251,7 @@ function EmpresaForm({ formData, updateField }: FormSectionProps) {
         placeholder="MILLIONTECH"
         value={formData.empresaNome}
         onChange={(e) => updateField('empresaNome', e.target.value)}
+        error={errors.empresaNome}
         required
       />
       <Input
@@ -164,6 +260,7 @@ function EmpresaForm({ formData, updateField }: FormSectionProps) {
         placeholder="00.000.000/0000-00"
         value={formData.empresaCnpj}
         onChange={(e) => updateField('empresaCnpj', e.target.value)}
+        error={errors.empresaCnpj}
         required
       />
       <Input
@@ -172,6 +269,7 @@ function EmpresaForm({ formData, updateField }: FormSectionProps) {
         placeholder="Rua, Numero"
         value={formData.empresaEndereco}
         onChange={(e) => updateField('empresaEndereco', e.target.value)}
+        error={errors.empresaEndereco}
         required
       />
       <Input
@@ -180,6 +278,7 @@ function EmpresaForm({ formData, updateField }: FormSectionProps) {
         placeholder="Securitizacao de creditos"
         value={formData.empresaAtividade}
         onChange={(e) => updateField('empresaAtividade', e.target.value)}
+        error={errors.empresaAtividade}
         required
       />
       <Input
@@ -193,7 +292,15 @@ function EmpresaForm({ formData, updateField }: FormSectionProps) {
   )
 }
 
-function FuncionarioForm({ formData, updateField }: FormSectionProps) {
+function FuncionarioForm({
+  formData,
+  updateField,
+  errors,
+  showSenha,
+  setShowSenha,
+  showConfirmarSenha,
+  setShowConfirmarSenha
+}: FuncionarioFormProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <Input
@@ -203,6 +310,7 @@ function FuncionarioForm({ formData, updateField }: FormSectionProps) {
         placeholder="seu@email.com"
         value={formData.email}
         onChange={(e) => updateField('email', e.target.value)}
+        error={errors.email}
         required
       />
       <Input
@@ -211,33 +319,55 @@ function FuncionarioForm({ formData, updateField }: FormSectionProps) {
         placeholder="VINICIUS GABRIEL BENITES LEITE"
         value={formData.nome}
         onChange={(e) => updateField('nome', e.target.value)}
+        error={errors.nome}
         required
       />
-      <Input
-        id="senha"
-        label="Senha"
-        type="password"
-        placeholder="Sua senha"
-        value={formData.senha}
-        onChange={(e) => updateField('senha', e.target.value)}
-        required
-      />
-      <Input
-        id="confirmarSenha"
-        label="Confirmar Senha"
-        type="password"
-        placeholder="Confirme a senha"
-        value={formData.confirmarSenha}
-        onChange={(e) => updateField('confirmarSenha', e.target.value)}
-        required
-      />
+      <div className="relative">
+        <Input
+          id="senha"
+          label="Senha"
+          type={showSenha ? 'text' : 'password'}
+          placeholder="Minimo 6 caracteres"
+          value={formData.senha}
+          onChange={(e) => updateField('senha', e.target.value)}
+          error={errors.senha}
+          required
+        />
+        <button
+          type="button"
+          className="absolute right-3 top-[38px] text-gray-500 hover:text-gray-700"
+          onClick={() => setShowSenha(!showSenha)}
+          tabIndex={-1}
+        >
+          {showSenha ? <EyeOffIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}
+        </button>
+      </div>
+      <div className="relative">
+        <Input
+          id="confirmarSenha"
+          label="Confirmar Senha"
+          type={showConfirmarSenha ? 'text' : 'password'}
+          placeholder="Confirme a senha"
+          value={formData.confirmarSenha}
+          onChange={(e) => updateField('confirmarSenha', e.target.value)}
+          error={errors.confirmarSenha}
+          required
+        />
+        <button
+          type="button"
+          className="absolute right-3 top-[38px] text-gray-500 hover:text-gray-700"
+          onClick={() => setShowConfirmarSenha(!showConfirmarSenha)}
+          tabIndex={-1}
+        >
+          {showConfirmarSenha ? <EyeOffIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}
+        </button>
+      </div>
       <Input
         id="codigoFuncionario"
         label="Codigo Funcionario"
         placeholder="014"
         value={formData.codigoFuncionario}
         onChange={(e) => updateField('codigoFuncionario', e.target.value)}
-        required
       />
       <Input
         id="cargo"
@@ -245,7 +375,6 @@ function FuncionarioForm({ formData, updateField }: FormSectionProps) {
         placeholder="DESENVOLVEDOR JUNIOR 1"
         value={formData.cargo}
         onChange={(e) => updateField('cargo', e.target.value)}
-        required
       />
       <Input
         id="codigoCargo"
@@ -253,7 +382,6 @@ function FuncionarioForm({ formData, updateField }: FormSectionProps) {
         placeholder="012"
         value={formData.codigoCargo}
         onChange={(e) => updateField('codigoCargo', e.target.value)}
-        required
       />
       <Input
         id="departamento"
@@ -261,7 +389,6 @@ function FuncionarioForm({ formData, updateField }: FormSectionProps) {
         placeholder="SUPORTE"
         value={formData.departamento}
         onChange={(e) => updateField('departamento', e.target.value)}
-        required
       />
       <Input
         id="codigoDepartamento"
@@ -269,7 +396,6 @@ function FuncionarioForm({ formData, updateField }: FormSectionProps) {
         placeholder="001"
         value={formData.codigoDepartamento}
         onChange={(e) => updateField('codigoDepartamento', e.target.value)}
-        required
       />
       <Input
         id="ctps"
@@ -277,7 +403,6 @@ function FuncionarioForm({ formData, updateField }: FormSectionProps) {
         placeholder="0560702"
         value={formData.ctps}
         onChange={(e) => updateField('ctps', e.target.value)}
-        required
       />
       <Input
         id="ctpsSerie"
@@ -285,7 +410,6 @@ function FuncionarioForm({ formData, updateField }: FormSectionProps) {
         placeholder="9140"
         value={formData.ctpsSerie}
         onChange={(e) => updateField('ctpsSerie', e.target.value)}
-        required
       />
       <Input
         id="pis"
@@ -293,7 +417,6 @@ function FuncionarioForm({ formData, updateField }: FormSectionProps) {
         placeholder="21314122861"
         value={formData.pis}
         onChange={(e) => updateField('pis', e.target.value)}
-        required
       />
     </div>
   )

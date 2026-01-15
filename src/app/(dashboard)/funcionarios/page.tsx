@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Modal } from '@/components/ui/modal'
-import { UsersIcon, PlusIcon, ErrorIcon, SuccessIcon, EditIcon } from '@/components/icons'
+import { UsersIcon, PlusIcon, ErrorIcon, SuccessIcon, EditIcon, EyeIcon, EyeOffIcon } from '@/components/icons'
 import { funcionariosService } from '@/services/api'
 import type { FuncionarioCompleto, UpdateFuncionarioData } from '@/types'
 
@@ -36,6 +36,10 @@ export default function FuncionariosPage() {
   const [editingFuncionario, setEditingFuncionario] = useState<FuncionarioCompleto | null>(null)
   const [editFormData, setEditFormData] = useState<UpdateFuncionarioData>({})
   const [editLoading, setEditLoading] = useState(false)
+
+  // Estado para toggle de senha
+  const [showSenha, setShowSenha] = useState(false)
+  const [showEditSenha, setShowEditSenha] = useState(false)
 
   const fetchFuncionarios = useCallback(async () => {
     try {
@@ -173,14 +177,24 @@ export default function FuncionariosPage() {
                   onChange={(e) => updateField('email', e.target.value)}
                   required
                 />
-                <Input
-                  id="senha"
-                  label="Senha"
-                  type="password"
-                  value={formData.senha}
-                  onChange={(e) => updateField('senha', e.target.value)}
-                  required
-                />
+                <div className="relative">
+                  <Input
+                    id="senha"
+                    label="Senha"
+                    type={showSenha ? 'text' : 'password'}
+                    value={formData.senha}
+                    onChange={(e) => updateField('senha', e.target.value)}
+                    required
+                  />
+                  <button
+                    type="button"
+                    className="absolute right-3 top-[38px] text-gray-500 hover:text-gray-700"
+                    onClick={() => setShowSenha(!showSenha)}
+                    tabIndex={-1}
+                  >
+                    {showSenha ? <EyeOffIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}
+                  </button>
+                </div>
                 <Input
                   id="nome"
                   label="Nome Completo"
@@ -363,13 +377,23 @@ export default function FuncionariosPage() {
                 onChange={(e) => updateEditField('email', e.target.value)}
                 required
               />
-              <Input
-                id="edit-senha"
-                label="Nova Senha (deixe em branco para manter)"
-                type="password"
-                value={editFormData.senha || ''}
-                onChange={(e) => updateEditField('senha', e.target.value)}
-              />
+              <div className="relative">
+                <Input
+                  id="edit-senha"
+                  label="Nova Senha (deixe em branco para manter)"
+                  type={showEditSenha ? 'text' : 'password'}
+                  value={editFormData.senha || ''}
+                  onChange={(e) => updateEditField('senha', e.target.value)}
+                />
+                <button
+                  type="button"
+                  className="absolute right-3 top-[38px] text-gray-500 hover:text-gray-700"
+                  onClick={() => setShowEditSenha(!showEditSenha)}
+                  tabIndex={-1}
+                >
+                  {showEditSenha ? <EyeOffIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}
+                </button>
+              </div>
               <Input
                 id="edit-nome"
                 label="Nome Completo"
