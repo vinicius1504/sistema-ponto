@@ -90,23 +90,33 @@ export async function POST(request: NextRequest) {
     // Hash da senha
     const senhaHash = await hashPassword(senha)
 
-    // Criar usuário
+    // Criar usuário com os dados da empresa vinculados (campos custom)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const usuarioData: any = {
+      email,
+      senhaHash,
+      nome,
+      codigoFuncionario,
+      cargo,
+      codigoCargo,
+      departamento,
+      codigoDepartamento,
+      ctps,
+      ctpsSerie,
+      pis,
+      empresaId: empresa.id,
+      isAdmin: false // Usuario cadastrado como funcionario, nao admin
+    }
+
+    // Salvar os dados da empresa do cadastro como dados custom do usuario
+    if (empresaNome) usuarioData.empresaNomeCustom = empresaNome
+    if (empresaCnpj) usuarioData.empresaCnpjCustom = empresaCnpj
+    if (empresaEndereco) usuarioData.empresaEnderecoCustom = empresaEndereco
+    if (empresaAtividade) usuarioData.empresaAtividadeCustom = empresaAtividade
+    if (empresaServico) usuarioData.empresaServicoCustom = empresaServico
+
     const usuario = await prisma.usuario.create({
-      data: {
-        email,
-        senhaHash,
-        nome,
-        codigoFuncionario,
-        cargo,
-        codigoCargo,
-        departamento,
-        codigoDepartamento,
-        ctps,
-        ctpsSerie,
-        pis,
-        empresaId: empresa.id,
-        isAdmin: true // Primeiro usuário da empresa é admin
-      }
+      data: usuarioData
     })
 
     // Criar token JWT
