@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { verifyAuth } from '@/lib/auth'
+import { getSession } from '@/lib/auth'
 
 export async function GET() {
   try {
-    const auth = await verifyAuth()
+    const auth = await getSession()
 
     if (!auth || !auth.isAdmin) {
       return NextResponse.json(
@@ -64,7 +64,7 @@ export async function GET() {
 // Endpoint para limpar dados antigos
 export async function DELETE() {
   try {
-    const auth = await verifyAuth()
+    const auth = await getSession()
 
     if (!auth || !auth.isAdmin) {
       return NextResponse.json(
